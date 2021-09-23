@@ -114,7 +114,7 @@ if __name__ == "__main__":
             
         model.load_state_dict(torch.load(sfcn_ckpt, map_location=torch.device('cpu')))
 
-        results_df = pd.DataFrame(columns=["subject_id","pred","prob"])
+        results_df = pd.DataFrame(columns=["eid","pred","prob"])
         for s, subject_id in enumerate(subject_list):
             try:
                 # Load image
