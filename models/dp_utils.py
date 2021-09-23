@@ -1,6 +1,20 @@
 import numpy as np
 from scipy.stats import norm
 
+def get_bin_centers(bin_range, bin_step):
+    """ Function to get bin centers from age ranges and step sizes
+    """
+    bin_start = bin_range[0]
+    bin_end = bin_range[1]
+    bin_length = bin_end - bin_start
+    if not bin_length % bin_step == 0:
+        print("bin's range should be divisible by bin_step!")
+        return -1
+    bin_number = int(bin_length / bin_step)
+    bin_centers = bin_start + float(bin_step) / 2 + bin_step * np.arange(bin_number)
+
+    return bin_centers
+
 def num2vect(x, bin_range, bin_step, sigma):
     """
     v,bin_centers = number2vector(x,bin_range,bin_step,sigma)
