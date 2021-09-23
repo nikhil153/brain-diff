@@ -85,8 +85,6 @@ if __name__ == "__main__":
 
     save_path = args.save_path
 
-    print(os.path.isfile(sfcn_ckpt))
-    print(os.path.exists(data_dir))
     if (not os.path.exists(data_dir)) | (not os.path.isfile(sfcn_ckpt)):
         print(f"Either {data_dir} or {sfcn_ckpt} is missing!")
     else:
@@ -118,20 +116,27 @@ if __name__ == "__main__":
 
         results_df = pd.DataFrame(columns=["subject_id","pred","prob"])
         for s, subject_id in enumerate(subject_list):
-            # Load image
-            subject_dir = f"{data_dir}sub-{subject_id}/{scan_session}/non-bids/T1/"
-            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
-            data = nib.load(T1_mni).get_fdata()
+            try:
+                # Load image
+                subject_dir = f"{data_dir}sub-{subject_id}/{scan_session}/non-bids/T1/"
+                T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+                data = nib.load(T1_mni).get_fdata()
 
-            # Preprocessing
-            input_data = preproc_images(data)
+                # Preprocessing
+                input_data = preproc_images(data)
 
-            # Prediction
-            prob, pred = get_brain_age(input_data, model, bc)
+                # Prediction
+                prob, pred = get_brain_age(input_data, model, bc)
             
-            results = [subject_id, pred, prob]
-            results_df.loc[s] = results
+                results = [subject_id, pred, prob]
+            
+            except:
+                print(f"Could not read T1w data for :{subject_id}")
+                results = [subject_id, -1, -1]
+                continue;
         
+            results_df.loc[s] = results
+
         # Save results to a csv
         print(f"Saving brain age predictions here: {save_path}")
         results_df.to_csv(save_path)      
