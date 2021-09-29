@@ -129,14 +129,12 @@ if __name__ == "__main__":
                 prob, pred = get_brain_age(input_data, model, bc)
             
                 results = [subject_id, pred, prob]
+                results_df.loc[s] = results
             
             except:
-                print(f"Could not read T1w data for :{subject_id}")
-                results = [subject_id, -1, -1]
-                continue;
+                print(f"Could not read T1w data for :{subject_id}")                
+                continue
         
-            results_df.loc[s] = results
-
         # Save results to a csv
         print(f"Saving brain age predictions here: {save_path}")
         results_df.to_csv(save_path)      
