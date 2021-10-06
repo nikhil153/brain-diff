@@ -12,3 +12,11 @@ def my_KLDivLoss(x, y):
     loss = loss_func(x, y) / n
     #print(loss)
     return loss
+
+def twin_KLDivLoss(x1,x2, y1,y2):
+    """Returns K-L Divergence loss for twin arch
+    """
+    loss1 = my_KLDivLoss(x1,y1)
+    loss2 = my_KLDivLoss(x2,y2)
+    loss = 0.5*(loss1 + loss2)
+    return loss
