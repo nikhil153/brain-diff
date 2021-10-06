@@ -49,13 +49,14 @@ parser.add_argument('--n_epochs', dest='n_epochs',
                     help='n_epochs for training')
 
 parser.add_argument('--save_path', dest='save_path', 
-                    default="./lsn.ckpt",
-                    help='path to save model checkpoint')
+                    default="./",
+                    help='path to save model checkpoint and train loss')
 
 args = parser.parse_args()
 
 def train(model, optimizer, criterion, n_epochs):
-    loss_list = []
+    batch_loss_list = []
+    epoch_loss_list = []
     for epoch in range(n_epochs):
         running_loss = 0.0
         model.train()
@@ -85,12 +86,21 @@ def train(model, optimizer, criterion, n_epochs):
 
             # print statistics
             running_loss += loss.item()
-            loss_list.append(loss.item())
+            batch_loss_list.append(loss.item())
+        
         
         epoch_loss = running_loss/len(train_dataloader)
         print(f"epoch loss: {epoch_loss:3.2f}")
+        epoch_loss_list.append(epoch_loss)
 
-    return model
+    ## loss df
+    batch_loss_df = pd.DataFrame()
+    batch_loss_df["batch_loss"] = batch_loss_list
+
+    epoch_loss_df = pd.DataFrame()
+    epoch_loss_df["epoch_loss"] = epoch_loss_list
+
+    return model, batch_loss_df, epoch_loss_df
 
 if __name__ == "__main__":
                    
@@ -132,9 +142,14 @@ if __name__ == "__main__":
 
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-    model = train(model,optimizer,criterion,n_epochs)
+    model, batch_loss_df, epoch_loss_df = train(model,optimizer,criterion,n_epochs)
 
     ## Save checkpoint
+    ckpt_save_path = save_path + "lsn.ckpt"
     torch.save({'epoch': n_epochs,
                 'model_state_dict': model.state_dict(),            
-                }, save_path)
+                }, ckpt_save_path)
+
+    ## save_losses
+    batch_loss_df.to_csv(save_path + "batch_loss.csv")
+    epoch_loss_df.to_csv(save_path + "epoch_loss.csv")
