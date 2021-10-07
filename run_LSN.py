@@ -1,5 +1,6 @@
 import os 
 import argparse
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -142,8 +143,14 @@ if __name__ == "__main__":
 
     optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
+    start_time = datetime.now()
+    print(f"Start training at: {start_time}")
     model, batch_loss_df, epoch_loss_df = train(model,optimizer,criterion,n_epochs)
 
+    end_time = datetime.now()
+    print(f"End training at: {end_time}")
+
+    print(f"Saving model chech point and loss logs at: {save_path}")
     ## Save checkpoint
     ckpt_save_path = save_path + "lsn.ckpt"
     torch.save({'epoch': n_epochs,

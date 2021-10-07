@@ -184,7 +184,7 @@ class UKBBDataset(Dataset):
         img2 = crop_center(img2, crop_shape)
         img2 = np.expand_dims(img2,0)
 
-        print(f"{img1.shape}, {img2.shape}, {age_ses2,age_ses3}")
+        print(f"eid: {eid}, age(s): {age_ses2,age_ses3}")
         if self.transform:
             img1 = self.transform(img1)
             img2 = self.transform(img2)
