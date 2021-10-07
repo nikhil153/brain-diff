@@ -141,20 +141,46 @@ class UKBBDataset(Dataset):
         ses2_subdir = self.img_subdirs[0]
         ses3_subdir = self.img_subdirs[1]
 
-        # ses-2 image
-        subject_dir = f"{ses2_root_dir}{subject_id}/{ses2_subdir}/"
-        T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
-        img1 = nib.load(T1_mni).get_fdata()
+        try: 
+            # ses-2 image
+            subject_dir = f"{ses2_root_dir}{subject_id}/{ses2_subdir}/"
+            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            img1 = nib.load(T1_mni).get_fdata()
+
+            # ses-3 image
+            subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
+            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            img2 = nib.load(T1_mni).get_fdata()
+
+        # in case the path doesn't exist for MNI image
+        # pick a eid that works
+        except:
+            print(f"{subject_id} has a missing scan. Using a fall-back sample : sub-1004084")
+            eid = 1004084
+            subject_id = f"sub-{eid}"
+
+            # ses-2 image
+            subject_dir = f"{ses2_root_dir}{subject_id}/{ses2_subdir}/"
+            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            img1 = nib.load(T1_mni).get_fdata()
+
+            # ses-3 image
+            subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
+            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            img2 = nib.load(T1_mni).get_fdata()
+
+            # Age
+            age_ses2 = ukbb_metadata[ukbb_metadata["eid"]==eid]["age_at_ses2"].values[0]
+            age_ses3 = ukbb_metadata[ukbb_metadata["eid"]==eid]["age_at_ses3"].values[0]
+            age_ses2_soft, bc = dpu.num2vect(age_ses2, bin_range, bin_step, sigma)
+            age_ses3_soft, bc = dpu.num2vect(age_ses3, bin_range, bin_step, sigma)
+
+        # minor preproc
         img1 = img1/img1.mean()
         img1 = crop_center(img1, crop_shape)
         img1 = np.expand_dims(img1,0)
-
-        # ses-3 image
-        subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
-        T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
-        img2 = nib.load(T1_mni).get_fdata()
-        img2 = img2/img2.mean()
     
+        img2 = img2/img2.mean()        
         img2 = crop_center(img2, crop_shape)
         img2 = np.expand_dims(img2,0)
 
