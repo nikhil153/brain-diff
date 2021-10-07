@@ -26,6 +26,9 @@ parser = argparse.ArgumentParser(description=HELPTEXT)
 parser.add_argument('--data_dir', dest='data_dir', 
                     default="/home/nikhil/projects/brain_changes/data/ukbb/imaging/ukbb_test_subject/",
                     help='data dir containing all the subjects')
+parser.add_argument('--img_subdir', dest='img_subdir',
+                    default="ses-2/non-bids/T1/",
+                    help='path from subject dir to T1 scan')
 parser.add_argument('--sfcn_ckpt', dest='sfcn_ckpt', 
                     default="models/run_20190719_00_epoch_best_mae.p",
                     help='pre-trained SFCN model weights')
@@ -73,6 +76,7 @@ def preproc_images(img, crop_shape=(160, 192, 160)):
 if __name__ == "__main__":
                    
     data_dir = args.data_dir
+    img_subdir = args.img_subdir
     sfcn_ckpt = args.sfcn_ckpt
     subject_list = args.subject_list
     scan_session = args.scan_session 
@@ -118,8 +122,13 @@ if __name__ == "__main__":
         for s, subject_id in enumerate(subject_list):
             try:
                 # Load image
-                subject_dir = f"{data_dir}sub-{subject_id}/{scan_session}/non-bids/T1/"
-                T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+                subject_dir = f"{data_dir}sub-{subject_id}/"
+                if scan_session == "ses-2":
+                    T1_filename = "T1_brain_to_MNI.nii.gz"
+                else:
+                    T1_filename = f"{subject_id}_ses-3_T1_brain_to_MNI.nii.gz"
+
+                T1_mni = f"{subject_dir}{img_subdir}{T1_filename}"
                 data = nib.load(T1_mni).get_fdata()
 
                 # Preprocessing
