@@ -115,8 +115,16 @@ if __name__ == "__main__":
             map_location=lambda storage, loc: storage.cuda()
         else:
             map_location='cpu'
-            
-        model.load_state_dict(torch.load(sfcn_ckpt, map_location=torch.device('cpu')))
+
+
+        # Original SFCN model
+        if sfcn_ckpt.split("/",1)[1] == "run_20190719_00_epoch_best_mae.p":
+            print("Using original SFCN checkpoint")
+            model.load_state_dict(torch.load(sfcn_ckpt, map_location=torch.device('cpu')))
+        else:
+            print("Using fine-tuned LSN checkpoint")
+            checkpoint = torch.load(sfcn_ckpt)
+            model.load_state_dict(checkpoint['model_state_dict'])
 
         results_df = pd.DataFrame(columns=["eid","pred","prob"])
         for s, subject_id in enumerate(subject_list):
