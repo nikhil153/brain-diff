@@ -147,9 +147,9 @@ class UKBBDataset(Dataset):
             T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
             img1 = nib.load(T1_mni).get_fdata()
 
-            # ses-3 image
+            # ses-3 image # sub-1004084_ses-3
             subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
-            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            T1_mni = f"{subject_dir}{subject_id}_ses-3_T1_brain_to_MNI.nii.gz"
             img2 = nib.load(T1_mni).get_fdata()
 
         # in case the path doesn't exist for MNI image
@@ -166,7 +166,7 @@ class UKBBDataset(Dataset):
 
             # ses-3 image
             subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
-            T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
+            T1_mni = f"{subject_dir}{subject_id}_ses-3_T1_brain_to_MNI.nii.gz"
             img2 = nib.load(T1_mni).get_fdata()
 
             # Age
