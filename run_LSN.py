@@ -24,9 +24,9 @@ Date: Oct-5-2021
 parser = argparse.ArgumentParser(description=HELPTEXT)
 
 # data
-parser.add_argument('--data_dir', dest='data_dir', 
+parser.add_argument('--data_dirs', dest='data_dirs',  nargs='+',
                     default="/home/nikhil/projects/brain_changes/data/ukbb/imaging/ukbb_test_subject/",
-                    help='data dir containing all the subjects')
+                    help='two data dirs containing all the subjects for each timepoint')
                     
 parser.add_argument('--img_subdirs', dest='img_subdirs', nargs='+',
                     default="ses-2/non-bids/T1/",
@@ -104,7 +104,7 @@ def train(model, optimizer, criterion, n_epochs):
 
 if __name__ == "__main__":
                    
-    data_dir = args.data_dir
+    data_dirs = args.data_dirs
     sfcn_ckpt = args.sfcn_ckpt
     img_subdirs = args.img_subdirs
     metadata_csv = args.metadata_csv
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     ## Dataloader
     batch_size = 1
-    ukbb_dataset = UKBBDataset(data_dir, img_subdirs, metadata_csv)
+    ukbb_dataset = UKBBDataset(data_dirs, img_subdirs, metadata_csv)
     train_dataloader = DataLoader(ukbb_dataset, batch_size=batch_size, shuffle=True)
 
     ## Model

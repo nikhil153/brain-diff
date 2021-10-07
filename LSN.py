@@ -106,8 +106,8 @@ class UKBBDataset(Dataset):
         n_samples is the size of the train set and the validation set combined
         transform is any image transformations
     '''
-    def __init__(self, root_dir, img_subdirs, metadata_csv, transform=None):
-        self.root_dir = root_dir  
+    def __init__(self, root_dirs, img_subdirs, metadata_csv, transform=None):
+        self.root_dirs = root_dirs  
         self.img_subdirs = img_subdirs
         self.metadata_csv = metadata_csv
         self.transform = transform
@@ -136,11 +136,13 @@ class UKBBDataset(Dataset):
        
         # Sample subject needs to be in the MNI space
         subject_id = f"sub-{eid}"
+        ses2_root_dir = self.root_dirs[0]
+        ses3_root_dir = self.root_dirs[1]
         ses2_subdir = self.img_subdirs[0]
         ses3_subdir = self.img_subdirs[1]
 
         # ses-2 image
-        subject_dir = f"{self.root_dir}{subject_id}/{ses2_subdir}/"
+        subject_dir = f"{ses2_root_dir}{subject_id}/{ses2_subdir}/"
         T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
         img1 = nib.load(T1_mni).get_fdata()
         img1 = img1/img1.mean()
@@ -148,7 +150,7 @@ class UKBBDataset(Dataset):
         img1 = np.expand_dims(img1,0)
 
         # ses-3 image
-        subject_dir = f"{self.root_dir}{subject_id}/{ses3_subdir}/"
+        subject_dir = f"{ses3_root_dir}{subject_id}/{ses3_subdir}/"
         T1_mni = f"{subject_dir}T1_brain_to_MNI.nii.gz"
         img2 = nib.load(T1_mni).get_fdata()
         img2 = img2/img2.mean()
