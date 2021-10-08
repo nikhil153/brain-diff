@@ -73,13 +73,13 @@ def train(model, train_dataloader, optimizer, criterion, n_epochs):
             img2 = img2.to(device)
             age_at_ses2 = age_at_ses2.to(device)
             age_at_ses3 = age_at_ses3.to(device)
-
+            
             # zero the parameter gradients
             optimizer.zero_grad()
 
             # forward + backward + optimize
             preds = model(img1, img2)
-
+            
             loss = criterion(preds[0][0],preds[1][0],age_at_ses2,age_at_ses3) #criterion(outputs, labels)
             
             loss.backward()
@@ -142,7 +142,7 @@ if __name__ == "__main__":
         checkpoint = torch.load(sfcn_ckpt)
         model.load_state_dict(checkpoint['model_state_dict'])
 
-    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = optim.SGD(model.parameters(), lr=0.001)
 
     start_time = datetime.now()
     print(f"Start training at: {start_time}")

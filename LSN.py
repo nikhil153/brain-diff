@@ -155,8 +155,8 @@ class UKBBDataset(Dataset):
         # in case the path doesn't exist for MNI image
         # pick a eid that works
         except:
-            print(f"{subject_id} has a missing scan. Using a fall-back sample : sub-1004084")
-            eid = 1004084
+            print(f"{subject_id} has a missing scan. Using a fall-back sample : sub-2483372")
+            eid = 2483372
             subject_id = f"sub-{eid}"
 
             # ses-2 image
