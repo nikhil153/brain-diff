@@ -55,20 +55,20 @@ parser.add_argument('--save_path', dest='save_path',
 
 args = parser.parse_args()
 
-def train(model, optimizer, criterion, n_epochs):
+def train(model, train_dataloader, optimizer, criterion, n_epochs):
     batch_loss_list = []
     epoch_loss_list = []
     for epoch in range(n_epochs):
         running_loss = 0.0
         model.train()
         print("Starting epoch " + str(epoch+1))
+        print(f"len dataloader: {len(train_dataloader)}")
         for inputs, outputs in train_dataloader:
             img1 = inputs[0]
             img2 = inputs[1]
             age_at_ses2 = outputs[0]
             age_at_ses3 = outputs[1]
 
-            # Forward
             img1 = img1.to(device)
             img2 = img2.to(device)
             age_at_ses2 = age_at_ses2.to(device)
@@ -86,6 +86,7 @@ def train(model, optimizer, criterion, n_epochs):
             optimizer.step()
 
             # print statistics
+            print(f"loss: {loss.item()}")
             running_loss += loss.item()
             batch_loss_list.append(loss.item())
         
@@ -145,7 +146,7 @@ if __name__ == "__main__":
 
     start_time = datetime.now()
     print(f"Start training at: {start_time}")
-    model, batch_loss_df, epoch_loss_df = train(model,optimizer,criterion,n_epochs)
+    model, batch_loss_df, epoch_loss_df = train(model,train_dataloader,optimizer,criterion,n_epochs)
 
     end_time = datetime.now()
     print(f"End training at: {end_time}")
