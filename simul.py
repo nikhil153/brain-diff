@@ -93,10 +93,10 @@ def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=5):
         test_r1 = stats.pearsonr(y_pred[0],y_test[0])[0]
         test_MAE2 = np.mean(abs(y_pred[1] - y_test[1]))
         test_r2 = stats.pearsonr(y_pred[1],y_test[1])[0]
-        test_MAE = 0.5 * (test_MAE1 + test_MAE2)
-        test_r = 0.5 * (test_r1 + test_r2)
+        # test_MAE = 0.5 * (test_MAE1 + test_MAE2)
+        # test_r = 0.5 * (test_r1 + test_r2)
 
-    return CV_scores, test_MAE, test_r
+    return CV_scores, test_MAE1, test_MAE2, test_r1, test_r2
 
 
 ## Torch 
@@ -333,7 +333,8 @@ def testSimpleFF(model, test_dataloader):
 
 def test(model, test_dataloader, criterion=nn.L1Loss()):
     with torch.no_grad():
-        batch_loss_list = []
+        loss1_list = []
+        loss2_list = []
         batch_pred_list = []
         for inputs, outputs in test_dataloader:
             img1 = inputs[0]
@@ -350,8 +351,11 @@ def test(model, test_dataloader, criterion=nn.L1Loss()):
             preds = model(img1, img2) 
             batch_pred_list.append(preds.detach().numpy())
 
-            loss = twinLoss(preds[:,:,0], preds[:,:,1], age_at_ses2, age_at_ses3, criterion)
-            batch_loss_list.append(loss.item())
+            loss1 = criterion(preds[:,:,0],age_at_ses2)
+            loss2 = criterion(preds[:,:,1],age_at_ses3)
+            # loss = 0.5*(loss1 + loss2)
+            loss1_list.append(loss1.item())
+            loss2_list.append(loss2.item())
 
         
-    return batch_pred_list, batch_loss_list
+    return batch_pred_list, loss1_list, loss2_list
