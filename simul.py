@@ -25,17 +25,17 @@ else:
     map_location='cpu'
                     
 
-def get_brain_trajectory(n_timepoints, intercept, time_shift, poly_order):
+def get_brain_trajectory(n_timepoints, init_val, peak_val, time_shift, poly_order):
     """ Generates ROI values over time based on a given polynomial model
     """
     t = np.arange(n_timepoints)
-    traj = intercept - ( (t-time_shift)**poly_order ) / (time_shift**poly_order)
+    traj = peak_val - ( init_val*(t-time_shift)**poly_order ) / (time_shift**poly_order)
     return traj
 
-def get_traj_samples(traj, n_samples, criterion="intercept"):
+def get_traj_samples(traj, n_samples, intersubject_std, criterion="intercept"):
     """ Generates N trajectory samples by adding random factor
     """
-    random_factor = np.random.randn(n_samples)
+    random_factor = intersubject_std*np.random.randn(n_samples)
     traj_sample = []
     for i in np.arange(n_samples):
         if criterion == "intercept":
@@ -73,7 +73,7 @@ def get_cross_sectional_samples(roi_list, followup_interval=0):
 
     return age_samples, roi_sampled_array, followup_roi_sampled_array
 
-def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=5):
+def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=2):
     """ Compute CV score and heldout sample MAE and correlation
     """
     pipeline = Pipeline([("brainage_model", model)])
@@ -86,17 +86,15 @@ def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=5):
     ## predict on held out test
     y_pred = pipeline.predict(X_test)
     if y_test.ndim == 1:
-        test_MAE = np.mean(abs(y_pred - y_test))
+        test_MAE = 100*(abs(y_pred - y_test)) #Scale age
         test_r = stats.pearsonr(y_pred,y_test)[0]
     else:
-        test_MAE1 = np.mean(abs(y_pred[0] - y_test[0]))
-        test_r1 = stats.pearsonr(y_pred[0],y_test[0])[0]
-        test_MAE2 = np.mean(abs(y_pred[1] - y_test[1]))
-        test_r2 = stats.pearsonr(y_pred[1],y_test[1])[0]
-        # test_MAE = 0.5 * (test_MAE1 + test_MAE2)
-        # test_r = 0.5 * (test_r1 + test_r2)
-
-    return CV_scores, test_MAE1, test_MAE2, test_r1, test_r2
+        test_MAE1 = 100*abs(y_pred[:,0] - y_test[:,0]) #Scale age
+        test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
+        test_MAE2 = 100*abs(y_pred[:,1] - y_test[:,1]) #Scale age
+        test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]
+        
+    return CV_scores, 100*y_pred, test_MAE1, test_MAE2, test_r1, test_r2
 
 
 ## Torch 
@@ -185,15 +183,19 @@ class LSN(nn.Module):
         self.fc3 = nn.Linear(2*self.hidden_size, self.hidden_size) #concat
         self.fc4 = nn.Linear(self.hidden_size, self.hidden_size)
         self.fc5 = nn.Linear(self.hidden_size, self.hidden_size)
+
+        self.drop = nn.Dropout(p=0.2)
     
         self.fcOut = nn.Linear(self.hidden_size, output_size)
+
+        self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
 
     def forward(self, x1, x2):
         # lower twin branches
-        x1 = self.fc2(self.fc1(x1))
-        x2 = self.fc2(self.fc1(x2))
+        x1 = self.drop(self.fc2(self.fc1(x1)))
+        x2 = self.drop(self.fc2(self.fc1(x2)))
 
         # middle concat
         x = torch.cat([x1,x2],dim=2)
@@ -203,9 +205,10 @@ class LSN(nn.Module):
         x3 = self.fc4(x) 
         x4 = self.fc5(x) 
         
-        # predict
-        x3 = self.sigmoid(self.fcOut(x3))
-        x4 = self.sigmoid(self.fcOut(x4))      
+        # predict (don't want sigmoid!)
+        x3 = self.relu(self.fcOut(x3))
+        x4 = self.relu(self.fcOut(x4))
+
         x_out = torch.cat([x3,x4],dim=2)
 
         return x_out
@@ -340,20 +343,20 @@ def test(model, test_dataloader, criterion=nn.L1Loss()):
             img1 = inputs[0]
             img2 = inputs[1]
 
-            age_at_ses2 = outputs[0]
-            age_at_ses3 = outputs[1]
+            age_at_ses2 = 100*outputs[0] #Scale age
+            age_at_ses3 = 100*outputs[1] #Scale age
 
             img1 = img1.to(device)
             img2 = img2.to(device)
             age_at_ses2 = age_at_ses2.to(device) 
             age_at_ses3 = age_at_ses3.to(device) 
             
-            preds = model(img1, img2) 
+            preds = 100*model(img1, img2) #Scale age
             batch_pred_list.append(preds.detach().numpy())
 
             loss1 = criterion(preds[:,:,0],age_at_ses2)
             loss2 = criterion(preds[:,:,1],age_at_ses3)
-            # loss = 0.5*(loss1 + loss2)
+            
             loss1_list.append(loss1.item())
             loss2_list.append(loss2.item())
 
