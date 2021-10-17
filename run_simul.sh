@@ -1,8 +1,11 @@
 #!/bin/bash
 
-python3 run_simul.py \
---config_file "./results/simulation/config_run_4.csv" \
---config_idx 10 \
---it 1 \
---save_path "./results/simulation/"
+RUN_ID=$1
+CONFIG_ID=$2
 
+echo "Run: $RUN_ID, CONFIG: $CONFIG_ID"
+python3 run_simul.py \
+--config_file "./results/simulation/configs/config_run_$RUN_ID.csv" \
+--config_idx "$CONFIG_ID" \
+--it "$RUN_ID" \
+--save_path "/results_dir/run_$RUN_ID"

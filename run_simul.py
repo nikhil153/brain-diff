@@ -199,7 +199,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
             y_CV = y[:n_CV]
             y_test = y[n_CV:]
 
-            if data_aug:
+            if data_aug & (followup_interval > 0) :
                 X_baseline_CV = X_baseline[:n_CV]
                 X_followup_CV = X_followup[:n_CV]
                 y_baseline_CV = y_baseline[:n_CV]
@@ -285,14 +285,14 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                         test_age_2 = None
 
                         test_brainage_1 = y_pred # for single timepoint y is a vector
-                        test_brainage_2 = y_pred
+                        test_brainage_2 = None
 
                 else:
                     CV_scores, y_pred, test_MAE1, test_MAE2, test_r1, test_r2 = get_brain_age_perf(X_CV, y_CV, X_test, y_test, model_instance)
                     train_loss = np.mean(-1*CV_scores) #negative MSE
-                    test_age_1 = y_test
+                    test_age_1 = np.squeeze(y_test)
                     test_age_2 = None
-                    test_brainage_1 = y_pred
+                    test_brainage_1 = np.squeeze(y_pred)
                     test_brainage_2 = None
 
 
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     config_file = args.config_file
     config_idx = int(args.config_idx)
     it = args.it
-    save_path = f"{args.save_path}/sim_perf_config_{config_idx}_iter_{it}.csv"
+    save_path = f"{args.save_path}/sim_perf_config_{config_idx}.csv"
 
     config_df = pd.read_csv(config_file)
 
@@ -339,5 +339,5 @@ if __name__ == "__main__":
 
     perf_df = run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_list, data_aug, it)
 
-    print(f"Saving simulation config: {config_idx} iter: {it} results at: {save_path}")
+    print(f"Saving simulation run:{it}, config: {config_idx} results at: {save_path}")
     perf_df.to_csv(save_path)
