@@ -63,9 +63,11 @@ args = parser.parse_args()
 n_timepoints = 100
 n_samples_list = [100,1000]
 n_regions_list = [10,100]
+
+lr = 0.001
 batch_size = 25
-n_epochs = 100
-hidden_node_list = [10,100]
+n_epochs = 500
+hidden_node_list = [10,25,50,100]
 n_jobs = 4
 
 def get_trajectories(traj_func, roi_variation, n_timepoints, n_regions):
@@ -166,8 +168,8 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
     for n_samples in n_samples_list:
         for n_regions in n_regions_list: 
             model_dict = {
-                        "Ridge": Ridge(), 
-                        "RF": RandomForestRegressor(n_jobs=n_jobs, random_state=1),                             
+                        # "Ridge": Ridge(), 
+                        # "RF": RandomForestRegressor(n_jobs=n_jobs, random_state=1),                             
                         "LSN": None,                            
                         }
 
@@ -225,7 +227,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                             model = LSN(X_baseline.shape[1],hidden_size=hidden_size) # alternative toy model: LSN()
                             model.train()
 
-                            optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.5)                                                                                               
+                            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.5)                                                                                               
                             criterion = nn.MSELoss()                        
 
                             model, batch_loss_df, epoch_loss_df = train(model,train_dataloader,optimizer,criterion,n_epochs)
@@ -236,7 +238,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                             model = simpleFF(X_CV.shape[1], hidden_size=hidden_size)
                             model.train()
 
-                            optimizer = optim.SGD(model.parameters(), lr=0.005, momentum=0.5)                                                                                               
+                            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.5)                                                                                               
                             criterion = nn.MSELoss()                        
 
                             model, batch_loss_df, epoch_loss_df = trainSimpleFF(model,train_dataloader,optimizer,criterion,n_epochs)                            

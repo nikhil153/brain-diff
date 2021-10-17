@@ -1,0 +1,13 @@
+,traj_func,roi_variation,subject_variation,followup_interval,data_aug
+0,exp,init_shift,0,0,False
+5,exp,init_shift,0.5,0,False
+10,exp,init_shift,1,0,False
+15,exp,time_shift,0,0,False
+20,exp,time_shift,0.5,0,False
+25,exp,time_shift,1,0,False
+30,poly,init_shift,0,0,False
+35,poly,init_shift,0.5,0,False
+40,poly,init_shift,1,0,False
+45,poly,time_shift,0,0,False
+50,poly,time_shift,0.5,0,False
+55,poly,time_shift,1,0,False
