@@ -25,11 +25,27 @@ else:
     map_location='cpu'
                     
 
-def get_brain_trajectory(n_timepoints, init_val, peak_val, time_shift, poly_order):
+def get_brain_trajectory(n_timepoints, func_type, func_params):
     """ Generates ROI values over time based on a given polynomial model
     """
     t = np.arange(n_timepoints)
-    traj = peak_val - ( init_val*(t-time_shift)**poly_order ) / (time_shift**poly_order)
+    if func_type == "exp":
+        init_val = func_params["init_val"]
+        decay = func_params["decay"]
+        
+        traj = init_val * np.exp(-1*(t/decay))
+
+    elif func_type == "poly":
+        init_val = func_params["init_val"]
+        peak_val = func_params["peak_val"]
+        time_shift = func_params["time_shift"]
+        poly_order = func_params["poly_order"]
+
+        traj = peak_val - ( (peak_val-init_val)*(t-time_shift)**poly_order ) / (time_shift**poly_order)
+
+    else:
+        print(f"Unknown function type: {func_type}")
+
     return traj
 
 def get_traj_samples(traj, n_samples, intersubject_std, criterion="intercept"):
@@ -67,7 +83,7 @@ def get_cross_sectional_samples(roi_list, followup_interval=0):
         followup_roi_sampled_list = []
         followup_roi_sample_idx = list(zip(np.arange(n_samples), age_samples + followup_interval))
         for roi in roi_list:
-            followup_roi_sampled_list.append(roi[tuple(np.transpose(roi_sample_idx))])
+            followup_roi_sampled_list.append(roi[tuple(np.transpose(followup_roi_sample_idx))])
 
         followup_roi_sampled_array = np.vstack(followup_roi_sampled_list).T
 
@@ -86,8 +102,10 @@ def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=2):
     ## predict on held out test
     y_pred = pipeline.predict(X_test)
     if y_test.ndim == 1:
-        test_MAE = 100*(abs(y_pred - y_test)) #Scale age
-        test_r = stats.pearsonr(y_pred,y_test)[0]
+        test_MAE1 = 100*(abs(y_pred - y_test)) #Scale age
+        test_r1 = stats.pearsonr(y_pred,y_test)[0]
+        test_MAE2 = None
+        test_r2 = None
     else:
         test_MAE1 = 100*abs(y_pred[:,0] - y_test[:,0]) #Scale age
         test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
@@ -145,7 +163,8 @@ class SimDataset(Dataset):
         output1 = np.expand_dims(output1,0)
         output2 = np.expand_dims(output2,0)
 
-        return (torch.tensor(input1,dtype=torch.float32), torch.tensor(input2,dtype=torch.float32)),(torch.tensor(output1,dtype=torch.float32), torch.tensor(output2,dtype=torch.float32))
+        return (torch.tensor(input1,dtype=torch.float32), torch.tensor(input2,dtype=torch.float32)), \
+            (torch.tensor(output1,dtype=torch.float32), torch.tensor(output2,dtype=torch.float32))
 
 
 class simpleFF(nn.Module):
@@ -154,24 +173,24 @@ class simpleFF(nn.Module):
         
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.output_size = output_size
+        self.output_size = output_size        
 
         self.fc1 = nn.Linear(self.input_size, self.hidden_size)
         self.fc2 = nn.Linear(self.hidden_size, self.hidden_size)
         self.fc3 = nn.Linear(self.hidden_size, self.hidden_size)
     
         self.fcOut = nn.Linear(self.hidden_size, output_size)
-        self.sigmoid = nn.Sigmoid()
+        self.relu = nn.ReLU()
 
 
     def forward(self, x):
-        x = self.fc3(self.fc2(self.fc1(x)))
-        x = self.sigmoid(self.fcOut(x))
+        x = self.relu(self.fc3(self.fc2(self.fc1(x))))
+        x = self.relu(self.fcOut(x))
         return x
 
 # Toy network for testing siamese arch
 class LSN(nn.Module):
-    def __init__(self, input_size,hidden_size,output_size=1):
+    def __init__(self, input_size,hidden_size,output_size=2):
         super(LSN, self).__init__()
         
         self.input_size = input_size
@@ -183,33 +202,39 @@ class LSN(nn.Module):
         self.fc3 = nn.Linear(2*self.hidden_size, self.hidden_size) #concat
         self.fc4 = nn.Linear(self.hidden_size, self.hidden_size)
         self.fc5 = nn.Linear(self.hidden_size, self.hidden_size)
+        self.fc6 = nn.Linear(self.hidden_size, self.hidden_size)
 
         self.drop = nn.Dropout(p=0.2)
     
         self.fcOut = nn.Linear(self.hidden_size, output_size)
 
         self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
 
 
     def forward(self, x1, x2):
         # lower twin branches
-        x1 = self.drop(self.fc2(self.fc1(x1)))
-        x2 = self.drop(self.fc2(self.fc1(x2)))
+        x1 = self.relu(self.fc1(x1))
+        x2 = self.relu(self.fc1(x2))
+
+        x1 = self.relu(self.fc2(x1))
+        x2 = self.relu(self.fc2(x2))
 
         # middle concat
         x = torch.cat([x1,x2],dim=2)
-        x = self.fc3(x)
-
-        # upper splits
-        x3 = self.fc4(x) 
-        x4 = self.fc5(x) 
+        x = self.relu(self.fc3(x))
+        x = self.relu(self.fc4(x))
         
-        # predict (don't want sigmoid!)
-        x3 = self.relu(self.fcOut(x3))
-        x4 = self.relu(self.fcOut(x4))
+        # upper splits
+        # x3 = self.relu(self.fc5(x))
+        # x4 = self.relu(self.fc6(x))
+        
+        # # predict (don't want sigmoid!)
+        # x3 = self.relu(self.fcOut(x3))
+        # x4 = self.relu(self.fcOut(x4))
 
-        x_out = torch.cat([x3,x4],dim=2)
+        # x_out = torch.cat([x3,x4],dim=2)
+        x_out = self.relu(self.fcOut(x))
 
         return x_out
 
@@ -231,8 +256,8 @@ def trainSimpleFF(model, train_dataloader, optimizer, criterion, n_epochs):
         # print("Starting epoch " + str(epoch+1))
         # print(f"len dataloader: {len(train_dataloader)}")
         for inputs, outputs in train_dataloader:
-            img1 = inputs[0]
-            age_at_ses2 = outputs[0]
+            img1 = inputs[:,0]
+            age_at_ses2 = outputs
 
             img1 = img1.to(device)            
             age_at_ses2 = age_at_ses2.to(device)
@@ -252,7 +277,7 @@ def trainSimpleFF(model, train_dataloader, optimizer, criterion, n_epochs):
         
         
         epoch_loss = running_loss/len(train_dataloader)
-        print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
+        # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
         epoch_loss_list.append(epoch_loss)
 
     ## loss df
@@ -304,7 +329,7 @@ def train(model, train_dataloader, optimizer, criterion, n_epochs):
         epoch_loss = running_loss/len(train_dataloader)
         # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
         epoch_loss_list.append(epoch_loss)
-    print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
+    # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
 
     ## loss df
     batch_loss_df = pd.DataFrame()
@@ -320,8 +345,8 @@ def testSimpleFF(model, test_dataloader):
     with torch.no_grad():
         batch_loss_list = []
         for inputs, outputs in test_dataloader:
-            img1 = inputs[0]            
-            age_at_ses2 = outputs[0]
+            img1 = inputs[:,0]            
+            age_at_ses2 = outputs
             img1 = img1.to(device)        
             age_at_ses2 = age_at_ses2.to(device) 
 
