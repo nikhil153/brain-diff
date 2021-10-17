@@ -1,10 +1,10 @@
 #!/bin/bash
 
 python3 run_LSN.py \
---data_dir "/home/nikhil/projects/brain_changes/data/ukbb/imaging/ukbb_test_subject/" \
---sfcn_ckpt "models/lsn.ckpt" \
---img_subdirs "ses-2/non-bids/T1/" "ses-2/non-bids/T1/" \
---metadata_csv "/home/nikhil/projects/brain_changes/data/ukbb/tabular/ukbb_test_subject_metadata.csv" \
---batch_size "2" \
---n_epochs "2" \
+--data_dir "/neurohub/ukbb/imaging/T1/" "/neurohub/ukbb/imaging/" \
+--sfcn_ckpt "models/run_20190719_00_epoch_best_mae.p" \
+--img_subdirs "ses-2/non-bids/T1/" "ses-3/anat/" \
+--metadata_csv "subject_lists/metadata_train.csv" \
+--batch_size "1" \
+--n_epochs "1" \
 --save_path "models/run_0/"
