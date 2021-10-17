@@ -273,11 +273,10 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                         test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=True)
 
                         model.eval()                    
-                        y_pred = testSimpleFF(model, test_dataloader)
-                        y_pred = np.squeeze(np.vstack(y_pred))                        
-                        
-                        test_MAE1 = np.mean(abs(y_pred - y_test))
+                        batch_pred_list, test_MAE1 = testSimpleFF(model, test_dataloader)
+                        y_pred = np.squeeze(np.vstack(batch_pred_list))                                                                        
                         test_MAE2 = None
+                        
                         test_r1 = stats.pearsonr(y_pred,y_test)[0]
                         test_r2 = None
 
@@ -290,12 +289,19 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                 else:
                     CV_scores, y_pred, test_MAE1, test_MAE2, test_r1, test_r2 = get_brain_age_perf(X_CV, y_CV, X_test, y_test, model_instance)
                     train_loss = np.mean(-1*CV_scores) #negative MSE
-                    test_age_1 = np.squeeze(y_test)
-                    test_age_2 = None
-                    test_brainage_1 = np.squeeze(y_pred)
-                    test_brainage_2 = None
 
-
+                    if followup_interval > 0:
+                        test_age_1 = y_test[:,0]
+                        test_age_2 = y_test[:,1]
+                        test_brainage_1 = y_pred[:,0]
+                        test_brainage_2 = y_pred[:,1]
+                    
+                    else:
+                        test_age_1 = y_test
+                        test_age_2 = None
+                        test_brainage_1 = y_pred
+                        test_brainage_2 = None
+                
                 df = pd.DataFrame()
                 df["eid"] = np.arange(len(y_test))
                 df["test_age_1"] = test_age_1

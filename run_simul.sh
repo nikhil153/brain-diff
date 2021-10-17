@@ -8,4 +8,4 @@ python3 run_simul.py \
 --config_file "./results/simulation/configs/config_run_$RUN_ID.csv" \
 --config_idx "$CONFIG_ID" \
 --it "$RUN_ID" \
---save_path "/results_dir/run_$RUN_ID"
+--save_path "./results/simulation/run_$RUN_ID/"

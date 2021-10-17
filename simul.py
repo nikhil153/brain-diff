@@ -341,23 +341,23 @@ def train(model, train_dataloader, optimizer, criterion, n_epochs):
     return model, batch_loss_df, epoch_loss_df
 
 
-def testSimpleFF(model, test_dataloader):
+def testSimpleFF(model, test_dataloader, criterion=nn.L1Loss()):
     with torch.no_grad():
         batch_loss_list = []
+        batch_pred_list = []
         for inputs, outputs in test_dataloader:
             img1 = inputs[:,0]            
             age_at_ses2 = outputs
             img1 = img1.to(device)        
-            age_at_ses2 = age_at_ses2.to(device) 
+            age_at_ses2 = 100*age_at_ses2.to(device) 
 
-            preds = model(img1) 
-                        
-            criterion = nn.L1Loss()
+            preds = 100*model(img1) 
+            batch_pred_list.append(preds.detach().numpy())
+                                    
             loss = criterion(preds, age_at_ses2)
-
             batch_loss_list.append(loss.item())
         
-    return batch_loss_list
+    return batch_pred_list, batch_loss_list
 
 def test(model, test_dataloader, criterion=nn.L1Loss()):
     with torch.no_grad():
@@ -385,5 +385,4 @@ def test(model, test_dataloader, criterion=nn.L1Loss()):
             loss1_list.append(loss1.item())
             loss2_list.append(loss2.item())
 
-        
     return batch_pred_list, loss1_list, loss2_list
