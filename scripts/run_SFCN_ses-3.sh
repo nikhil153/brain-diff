@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install -e ../
+
 python3 run_SFCN.py \
 --data_dir "/neurohub/ukbb/imaging/" \
 --img_subdir "ses-3/anat/" \

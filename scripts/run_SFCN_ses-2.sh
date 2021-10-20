@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install -e ../
+
 python3 run_SFCN.py \
 --data_dir "/neurohub/ukbb/imaging/T1/" \
 --img_subdir "ses-2/non-bids/T1/" \

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install -e ../
+
 python3 run_LSN.py \
 --data_dir "/neurohub/ukbb/imaging/T1/" "/neurohub/ukbb/imaging/" \
 --sfcn_ckpt "../models/run_20190719_00_epoch_best_mae.p" \

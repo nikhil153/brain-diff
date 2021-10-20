@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install -e ../
+
 python3 run_LSN.py \
 --data_dirs "/home/nikhil/projects/brain_changes/data/ukbb/imaging/ukbb_test_subject/" \
             "/home/nikhil/projects/brain_changes/data/ukbb/imaging/ukbb_test_subject/" \

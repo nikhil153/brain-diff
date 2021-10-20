@@ -1,6 +1,8 @@
 #!/bin/bash
 
-python3 run_SFCN.py \
+pip install -e ../
+
+python3 src/run_SFCN.py \
 --data_dir "/neurohub/ukbb/imaging/T1/" \
 --sfcn_ckpt "models/run_20190719_00_epoch_best_mae.p" \
 --subject_list "./test_subject_list.txt" \
