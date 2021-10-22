@@ -154,23 +154,23 @@ def get_trajectories(traj_func, roi_variation, n_timepoints, n_regions):
 
     return traj_list
 
-def augment_data(X_baseline_CV, X_followup_CV, y_baseline_CV, y_followup_CV, swap_only=True):
+def augment_data(X_baseline, X_followup, y_baseline, y_followup, swap_only=True):
     """ Augments training (i.e. internal CV data) by swapping baseline and followup data
     """
-    X_orig = np.hstack([X_baseline_CV,X_followup_CV])
-    y_orig = np.vstack([y_baseline_CV,y_followup_CV]).T
+    X_orig = np.hstack([X_baseline,X_followup])
+    y_orig = np.vstack([y_baseline,y_followup]).T
     
     # swap timepoints
-    X_swap = np.hstack([X_followup_CV, X_baseline_CV])
-    y_swap = np.vstack([y_followup_CV, y_baseline_CV]).T
+    X_swap = np.hstack([X_followup, X_baseline])
+    y_swap = np.vstack([y_followup, y_baseline]).T
     
     # baseline only
-    X_base = np.hstack([X_baseline_CV, X_baseline_CV])
-    y_base = np.vstack([y_baseline_CV, y_baseline_CV]).T
+    X_base = np.hstack([X_baseline, X_baseline])
+    y_base = np.vstack([y_baseline, y_baseline]).T
 
     # followup only
-    X_follow = np.hstack([X_followup_CV, X_followup_CV])
-    y_follow = np.vstack([y_followup_CV, y_followup_CV]).T
+    X_follow = np.hstack([X_followup, X_followup])
+    y_follow = np.vstack([y_followup, y_followup]).T
 
     if swap_only:
         X_CV = np.vstack([X_orig,X_swap])

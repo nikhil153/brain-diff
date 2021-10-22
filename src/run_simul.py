@@ -201,13 +201,13 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                     train_loss = np.mean(-1*CV_scores) #negative MSE
 
                     if followup_interval > 0:
-                        test_age_1 = y_test[:,0]
-                        test_age_2 = y_test[:,1]
+                        test_age_1 = 100*y_test[:,0]
+                        test_age_2 = 100*y_test[:,1]
                         test_brainage_1 = y_pred[:,0]
                         test_brainage_2 = y_pred[:,1]
                     
                     else:
-                        test_age_1 = y_test
+                        test_age_1 = 100*y_test
                         test_age_2 = None
                         test_brainage_1 = y_pred
                         test_brainage_2 = None
