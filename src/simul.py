@@ -314,7 +314,9 @@ class LSN(nn.Module):
         x2 = self.relu(self.fc2(x2))
 
         # middle concat
+        # print(f"x1,x2 shapes: {x1.shape}, {x2.shape}")
         x = torch.cat([x1,x2],dim=2)
+        # print(f"concat shape: {x.shape}")
         x = self.relu(self.fc3(x))
         x = self.relu(self.fc4(x))
         
@@ -420,9 +422,8 @@ def train(model, train_dataloader, optimizer, criterion, n_epochs):
         
         
         epoch_loss = running_loss/len(train_dataloader)
-        # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
         epoch_loss_list.append(epoch_loss)
-    # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
+    print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
 
     ## loss df
     batch_loss_df = pd.DataFrame()
