@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from src.simul import *
+from src.utils import *
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 if torch.cuda.is_available():
@@ -33,7 +34,7 @@ else:
                     
 
 HELPTEXT = """
-Script run simulations with 2 visit data
+Script to run simulations with 2 visit data
 Author: nikhil153
 Date: Oct-15-2021
 """
@@ -91,9 +92,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
 
             # normalize y
             y_followup = y_baseline + followup_interval
-            y_baseline = y_baseline/100
-            y_followup = y_followup/100
-
+            
             if followup_interval > 0:                
                 X = np.hstack([X_baseline,X_followup])
                 y = np.vstack([y_baseline,y_followup]).T
@@ -132,7 +131,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                             train_dataset = SimDataset(X_CV[:,:n_regions], X_CV[:,n_regions:], y_CV[:,0], y_CV[:,1])
                             train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
                         
-                            model = LSN(X_baseline.shape[1],hidden_size=hidden_size) # alternative toy model: LSN()
+                            model = LSN_FF(X_baseline.shape[1],hidden_size=hidden_size)
                             model.train()
 
                             optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.5)                                                                                               
@@ -172,8 +171,8 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                         test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
                         test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]   
 
-                        test_age_1 = 100*y_test[:,0]
-                        test_age_2 = 100*y_test[:,1]
+                        test_age_1 = y_test[:,0]
+                        test_age_2 = y_test[:,1]
 
                         test_brainage_1 = y_pred[:,0] # for two timepoints y is a matrix
                         test_brainage_2 = y_pred[:,1]
@@ -190,7 +189,7 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                         test_r1 = stats.pearsonr(y_pred,y_test)[0]
                         test_r2 = None
 
-                        test_age_1 = 100*y_test
+                        test_age_1 = y_test
                         test_age_2 = None
 
                         test_brainage_1 = y_pred # for single timepoint y is a vector
@@ -201,13 +200,13 @@ def run(traj_func, roi_variation, subject_variation, n_samples_list, n_regions_l
                     train_loss = np.mean(-1*CV_scores) #negative MSE
 
                     if followup_interval > 0:
-                        test_age_1 = 100*y_test[:,0]
-                        test_age_2 = 100*y_test[:,1]
+                        test_age_1 = y_test[:,0]
+                        test_age_2 = y_test[:,1]
                         test_brainage_1 = y_pred[:,0]
                         test_brainage_2 = y_pred[:,1]
                     
                     else:
-                        test_age_1 = 100*y_test
+                        test_age_1 = y_test
                         test_age_2 = None
                         test_brainage_1 = y_pred
                         test_brainage_2 = None
