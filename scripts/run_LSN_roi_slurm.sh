@@ -3,17 +3,17 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --ntasks=2
 #SBATCH --mem-per-cpu=32G               # memory (per node)
-#SBATCH --time=0-24:00            # time (DD-HH:MM)
-#SBATCH --job-name=brain_diff_simul
+#SBATCH --time=0-23:00            # time (DD-HH:MM)
+#SBATCH --job-name=brain_diff_LSN_roi
 #SBATCH --output=logs/%x-%j.out
-#SBATCH --array=0-17
+#SBATCH --array=0-2
 
 echo "Starting task $SLURM_ARRAY_TASK_ID"
 
 CONFIG_ID=$SLURM_ARRAY_TASK_ID
 RUN_ID=$1
 DATA_DIR="/data"
-RESULTS_DIR="/results_dir"
+RESULTS_DIR="/results"
 
 module load singularity/3.8
 singularity exec -B /home/nikhil/scratch/brain_diff/LSN_roi/results:/$RESULTS_DIR \

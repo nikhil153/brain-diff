@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import time
 from datetime import datetime
 import argparse
 
@@ -71,8 +72,8 @@ args = parser.parse_args()
 
 # Globals
 lr = 0.001
-batch_size = 25
-n_epochs = 5
+batch_size = 100
+n_epochs = 20
 
 def run(train_df, test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform):
     # train
@@ -181,8 +182,14 @@ if __name__ == "__main__":
         train_df = train_df.head(100)
         test_df = test_df.head(10)
 
+    start_time = time.time()
+
     perf_df = run(train_df, test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
-    print(perf_df)
 
     print(f"Saving LSN_roi run:{run_id}, config: {config_idx} results at: {save_path}")
     perf_df.to_csv(save_path)
+
+    end_time = time.time()
+    run_time = (end_time - start_time)/3600.0
+
+    print(f"total run time (hrs): {run_time}") 

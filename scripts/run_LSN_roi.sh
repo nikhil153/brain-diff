@@ -16,4 +16,4 @@ python3 ../src/run_LSN_roi.py \
 --config_idx "$CONFIG_ID" \
 --run_id "$RUN_ID" \
 --save_path "$RESULTS_DIR/run_$RUN_ID/" \
---mock_run 1
+--mock_run 0
