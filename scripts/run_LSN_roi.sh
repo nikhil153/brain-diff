@@ -2,14 +2,15 @@
 
 RUN_ID=$1
 CONFIG_ID=$2
-RESULTS_DIR=$3
+DATA_DIR=$3
+RESULTS_DIR=$4
 
 pip install -e ../
 
-echo "RUN: $RUN_ID, CONFIG: $CONFIG_ID, RESULTS DIR: $RESULTS_DIR"
+echo "RUN: $RUN_ID, CONFIG: $CONFIG_ID, DATA DIR: $DATA_DIR, RESULTS DIR: $RESULTS_DIR"
 
 python3 ../src/run_LSN_roi.py \
---data_dir "/home/nikhil/projects/brain_changes/data/ukbb/" \
+--data_dir "$DATA_DIR/" \
 --metadata_dir "../metadata/" \
 --config_file "../results/LSN_roi/configs/config_run_$RUN_ID.csv" \
 --config_idx "$CONFIG_ID" \

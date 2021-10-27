@@ -150,9 +150,11 @@ if __name__ == "__main__":
     metadata_dir = args.metadata_dir #"../"
     data_dir = args.data_dir #"/home/nikhil/projects/brain_changes/data/ukbb/"
 
+    print(f"data dir: {data_dir}, metadata_dir: {metadata_dir}")
+
     train_csv = f"{metadata_dir}/metadata_train.csv"
     test_csv = f"{metadata_dir}/metadata_test.csv"
-    freesurfer_csv = f"{data_dir}imaging/freesurfer/ukb47552_followup_subset.csv"
+    freesurfer_csv = f"{data_dir}ukb47552_followup_subset.csv"
 
     ## Select freesurfer phenotype (e.g. thickness vs volume vs both)
     freesurfer_fields = f"{metadata_dir}/ukbb_freesurfer_fields.txt"
