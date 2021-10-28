@@ -75,9 +75,9 @@ lr = 0.001
 batch_size = 100
 n_epochs = 20
 
-def run(train_df, test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform):
+def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform):
     # train
-    train_dataset = UKBB_ROI_Dataset(train_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, transform=transform)
+    train_dataset = UKBB_ROI_Dataset(train_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
     input_size = len(pheno_cols_ses2)
@@ -99,7 +99,7 @@ def run(train_df, test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, hid
         else:
             visit_order = "B,F"
 
-        test_dataset = UKBB_ROI_Dataset(test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, transform=test_transform)
+        test_dataset = UKBB_ROI_Dataset(test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=test_transform)
         test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
         y_test = test_df[["age_at_ses2", "age_at_ses3"]].values 
@@ -155,7 +155,6 @@ if __name__ == "__main__":
 
     train_csv = f"{metadata_dir}/metadata_train.csv"
     test_csv = f"{metadata_dir}/metadata_test.csv"
-    freesurfer_csv = f"{data_dir}ukb47552_followup_subset.csv"
 
     ## Select freesurfer phenotype (e.g. thickness vs volume vs both)
     freesurfer_fields = f"{metadata_dir}/ukbb_freesurfer_fields.txt"
@@ -176,6 +175,10 @@ if __name__ == "__main__":
     pheno_cols_ses3 = list(pheno_fields.astype(str) + "-3.0")
     usecols = ["eid"] + pheno_cols_ses2 + pheno_cols_ses3
 
+    freesurfer_csv = f"{data_dir}ukb47552_followup_subset.csv"
+    data_df = pd.read_csv(freesurfer_csv, usecols=usecols)
+    
+
     train_df, test_df = get_ML_dataframes(usecols, freesurfer_csv, train_csv, test_csv)
     if mock_run == 1:
         print(f"Doing a mock run with 100 train samples and 10 test samples")
@@ -184,7 +187,7 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    perf_df = run(train_df, test_df, freesurfer_csv, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
+    perf_df = run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
 
     print(f"Saving LSN_roi run:{run_id}, config: {config_idx} results at: {save_path}")
     perf_df.to_csv(save_path)
