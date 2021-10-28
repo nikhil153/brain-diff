@@ -132,7 +132,7 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
         
         perf_df = perf_df.append(df)
 
-    return perf_df
+    return epoch_loss_df, perf_df
 
 
 if __name__ == "__main__":
@@ -140,13 +140,16 @@ if __name__ == "__main__":
     config_file = args.config_file
     config_idx = int(args.config_idx)
     run_id = args.run_id
-    save_path = f"{args.save_path}/freesurfer_perf_config_{config_idx}.csv"
+    perf_save_path = f"{args.save_path}/freesurfer_perf_config_{config_idx}.csv"
+    train_save_path = f"{args.save_path}/freesurfer_train_loss_config_{config_idx}.csv"
     mock_run = int(args.mock_run)
 
     config_df = pd.read_csv(config_file)
     hidden_size = config_df.loc[config_idx,"hidden_size"]
     transform = config_df.loc[config_idx,"transform"]
     phenotype = config_df.loc[config_idx,"phenotype"]
+
+    print(f"Config: hidden_size: {hidden_size}, transform: {transform}, pheno: {phenotype}")
 
     metadata_dir = args.metadata_dir #"../"
     data_dir = args.data_dir #"/home/nikhil/projects/brain_changes/data/ukbb/"
@@ -169,8 +172,9 @@ if __name__ == "__main__":
     elif phenotype == "volume":
         pheno_fields = volume_fields
     else:
-        pheno_fields = CT_fields + volume_fields
+        pheno_fields = CT_fields.append(volume_fields)
 
+    print(f"phono fields: {pheno_fields}")
     pheno_cols_ses2 = list(pheno_fields.astype(str) + "-2.0")
     pheno_cols_ses3 = list(pheno_fields.astype(str) + "-3.0")
     usecols = ["eid"] + pheno_cols_ses2 + pheno_cols_ses3
@@ -187,10 +191,11 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    perf_df = run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
+    epoch_loss_df, perf_df = run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
 
-    print(f"Saving LSN_roi run:{run_id}, config: {config_idx} results at: {save_path}")
-    perf_df.to_csv(save_path)
+    print(f"Saving LSN_roi run:{run_id}, config: {config_idx} results at: {perf_save_path}")
+    perf_df.to_csv(perf_save_path)
+    epoch_loss_df.to_csv(train_save_path)
 
     end_time = time.time()
     run_time = (end_time - start_time)/3600.0
