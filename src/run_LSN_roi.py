@@ -71,7 +71,7 @@ parser.add_argument('--mock_run', dest='mock_run',
 args = parser.parse_args()
 
 # Globals
-lr = 0.001
+lr = 0.005
 batch_size = 100
 n_epochs = 20
 
@@ -96,13 +96,13 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
     for test_transform in [None, "swap"]:
         if test_transform == "swap":
             visit_order = "F,B"
+            y_test = test_df[["age_at_ses3", "age_at_ses2"]].values 
         else:
             visit_order = "B,F"
+            y_test = test_df[["age_at_ses2", "age_at_ses3"]].values 
 
         test_dataset = UKBB_ROI_Dataset(test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=test_transform)
         test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
-
-        y_test = test_df[["age_at_ses2", "age_at_ses3"]].values 
 
         model.eval()
 
@@ -119,7 +119,7 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
         test_brainage_2 = y_pred[:,1]                                    
 
         df = pd.DataFrame()
-        df["eid"] = np.arange(len(y_test))
+        df["eid"] = test_df["eid"]
         df["test_age_1"] = test_age_1
         df["test_age_2"] = test_age_2
         df["test_brainage_1"] = test_brainage_1
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     else:
         pheno_fields = CT_fields.append(volume_fields)
 
-    print(f"phono fields: {pheno_fields}")
+    # print(f"phono fields: {pheno_fields}")
     pheno_cols_ses2 = list(pheno_fields.astype(str) + "-2.0")
     pheno_cols_ses3 = list(pheno_fields.astype(str) + "-3.0")
     usecols = ["eid"] + pheno_cols_ses2 + pheno_cols_ses3

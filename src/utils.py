@@ -79,7 +79,7 @@ class simpleFF(nn.Module):
 
 # Toy network for testing siamese arch
 class LSN_FF(nn.Module):
-    def __init__(self, input_size,hidden_size,output_size=2):
+    def __init__(self, input_size,hidden_size,output_size=1):
         super(LSN_FF, self).__init__()
         
         self.input_size = input_size
@@ -117,15 +117,15 @@ class LSN_FF(nn.Module):
         x = self.relu(self.fc4(x))
         
         # upper splits
-        # x3 = self.relu(self.fc5(x))
-        # x4 = self.relu(self.fc6(x))
+        x3 = self.relu(self.fc5(x))
+        x4 = self.relu(self.fc6(x))
         
-        # # predict (don't want sigmoid!)
-        # x3 = self.relu(self.fcOut(x3))
-        # x4 = self.relu(self.fcOut(x4))
+        # predict (don't want sigmoid!)
+        x3 = self.relu(self.fcOut(x3))
+        x4 = self.relu(self.fcOut(x4))
 
-        # x_out = torch.cat([x3,x4],dim=2)
-        x_out = self.relu(self.fcOut(x))
+        x_out = torch.cat([x3,x4],dim=2)
+        # x_out = self.relu(self.fcOut(x))
 
         return x_out
 
@@ -237,7 +237,7 @@ def train(model, train_dataloader, optimizer, criterion, n_epochs):
         
         epoch_loss = running_loss/len(train_dataloader)
         epoch_loss_list.append(epoch_loss)
-        # print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
+        print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
 
     print(f"epoch {epoch} loss: {epoch_loss:5.4f}")
 
