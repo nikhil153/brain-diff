@@ -110,20 +110,14 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
         y_pred = np.squeeze(np.vstack(batch_pred_list))
 
         test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
-        test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]   
-
-        test_age_1 = y_test[:,0]
-        test_age_2 = y_test[:,1]
-
-        test_brainage_1 = y_pred[:,0] # for two timepoints y is a matrix
-        test_brainage_2 = y_pred[:,1]                                    
+        test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]                                     
 
         df = pd.DataFrame()
         df["eid"] = test_df["eid"]
-        df["test_age_1"] = test_age_1
-        df["test_age_2"] = test_age_2
-        df["test_brainage_1"] = test_brainage_1
-        df["test_brainage_2"] = test_brainage_2
+        df["age_at_ses2"] = y_test[:,0]
+        df["age_at_ses3"] = y_test[:,1]
+        df["brainage_at_ses2"] = y_pred[:,0]
+        df["brainage_at_ses3"] = y_pred[:,1]
         df["test_MAE1"] = test_MAE1                    
         df["test_MAE2"] = test_MAE2
         df["test_r1"] = test_r1
