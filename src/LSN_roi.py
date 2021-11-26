@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader, random_split
 import numpy as np
+from sklearn.preprocessing import StandardScaler
 import pandas as pd
 import random
 
@@ -15,18 +16,19 @@ def get_ML_dataframes(usecols, freesurfer_csv, train_csv, test_csv):
     # Remove eids with missing 2nd or 3rd ses data
     eid_missing_data = freesurfer_df[freesurfer_df.isna().any(axis=1)]["eid"].values
     print(f"number participants missing 2nd or 3rd ses freesurfer data: {len(eid_missing_data)}")
-
     freesurfer_eids = freesurfer_df[~freesurfer_df["eid"].isin(eid_missing_data)]["eid"].values
+
+    freesurfer_df = freesurfer_df[~freesurfer_df["eid"].isin(eid_missing_data)]
 
     train_df = pd.read_csv(train_csv)
     train_eids = train_df["eid"]
     train_eids_avail = set(train_eids) & set(freesurfer_eids)
-    train_df = train_df[train_df["eid"].isin(train_eids_avail)].reset_index()
+    train_df = pd.merge(train_df, freesurfer_df, on="eid", how="inner")
 
     test_df = pd.read_csv(test_csv)
     test_eids = test_df["eid"]
     test_eids_avail = set(test_eids) & set(freesurfer_eids)
-    test_df = test_df[test_df["eid"].isin(test_eids_avail)].reset_index()
+    test_df = pd.merge(test_df, freesurfer_df, on="eid", how="inner")
 
     return train_df, test_df
 
@@ -34,26 +36,25 @@ class UKBB_ROI_Dataset(Dataset):
     ''' UKBB ROI Dataset comprsing FreeSurfer output
     '''
 
-    def __init__(self, metadata_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=None):
-        self.metadata_df = metadata_df
+    def __init__(self, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=None):
         self.data_df = data_df 
         self.pheno_cols_ses2 = pheno_cols_ses2
         self.pheno_cols_ses3 = pheno_cols_ses3
         self.transform = transform
         
     def __len__(self):
-        n_samples = len(self.metadata_df)
+        n_samples = len(self.data_df)
         return n_samples
 
     def __getitem__(self, idx):
-        _df = self.metadata_df.copy()
+        _df = self.data_df.copy()
         eid = _df.loc[idx,"eid"]
         age_ses2 = _df[_df["eid"]==eid]["age_at_ses2"].values[0]
         age_ses3 = _df[_df["eid"]==eid]["age_at_ses3"].values[0]    
         
-        X_baseline = self.data_df[self.data_df["eid"]==eid][self.pheno_cols_ses2].values
-        X_followup = self.data_df[self.data_df["eid"]==eid][self.pheno_cols_ses3].values
-        
+        X_baseline = _df[_df["eid"]==eid][self.pheno_cols_ses2].values
+        X_followup = _df[_df["eid"]==eid][self.pheno_cols_ses3].values
+
         # input1 = np.expand_dims(input1,0)
         # input2 = np.expand_dims(input2,0)
 
@@ -79,4 +80,4 @@ class UKBB_ROI_Dataset(Dataset):
             input_tensor = (torch.tensor(X_baseline,dtype=torch.float32), torch.tensor(X_followup,dtype=torch.float32))
             output_tensor = (torch.tensor(y_baseline,dtype=torch.float32), torch.tensor(y_followup,dtype=torch.float32))
 
-        return input_tensor, output_tensor
+        return eid, input_tensor, output_tensor

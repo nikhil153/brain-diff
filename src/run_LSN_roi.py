@@ -37,6 +37,11 @@ Author: nikhil153
 Date: Oct-27-2021
 """
 
+# Sample run command
+# python3 run_LSN_roi.py --config_file ../results/LSN_roi/configs/config_run_3.csv --config_idx 0 --run_id 3 \
+# --data_dir ../../data/ukbb/imaging/freesurfer/ --metadata_dir ../metadata/ \
+# --save_path ../results/LSN_roi/run_3/
+
 parser = argparse.ArgumentParser(description=HELPTEXT)
 
 # data
@@ -71,24 +76,24 @@ parser.add_argument('--mock_run', dest='mock_run',
 args = parser.parse_args()
 
 # Globals
-lr = 0.005
-batch_size = 100
-n_epochs = 20
+lr = 0.001
+batch_size = 5
+n_epochs = 50
 
-def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform):
+def run(train_df, test_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform):
     # train
-    train_dataset = UKBB_ROI_Dataset(train_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=transform)
+    train_dataset = UKBB_ROI_Dataset(train_df, pheno_cols_ses2, pheno_cols_ses3, transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     
     input_size = len(pheno_cols_ses2)
-    model = LSN_FF(input_size,hidden_size=hidden_size) # alternative toy model: LSN()
+    model = LSN_FF_Linear(input_size,hidden_size=hidden_size) # alternative toy model: LSN()
     model.train()
 
-    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.5)                                                                                               
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr) #optim.SGD(model.parameters(), lr=lr, momentum=0.5)                                                                                               
     criterion = nn.MSELoss()                        
 
     # using subset of train dataloader for debug
-    model, batch_loss_df, epoch_loss_df = train(model,train_dataloader,optimizer,criterion,n_epochs)
+    model, batch_loss_df, epoch_loss_df, preds_df = train(model,train_dataloader,optimizer,criterion,n_epochs)
 
     # test
     perf_df = pd.DataFrame()
@@ -101,13 +106,15 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
             visit_order = "B,F"
             y_test = test_df[["age_at_ses2", "age_at_ses3"]].values 
 
-        test_dataset = UKBB_ROI_Dataset(test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, transform=test_transform)
+        test_dataset = UKBB_ROI_Dataset(test_df, pheno_cols_ses2, pheno_cols_ses3, transform=test_transform)
         test_dataloader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
         model.eval()
 
-        batch_pred_list, test_MAE1, test_MAE2 = test(model, test_dataloader)
-        y_pred = np.squeeze(np.vstack(batch_pred_list))
+        eid_list, y_test_list, y_pred_list, loss1_list, loss2_list = test(model, test_dataloader)
+
+        y_test = np.squeeze(np.vstack(y_test_list))
+        y_pred = np.squeeze(np.vstack(y_pred_list))
 
         test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
         test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]                                     
@@ -118,8 +125,8 @@ def run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_siz
         df["age_at_ses3"] = y_test[:,1]
         df["brainage_at_ses2"] = y_pred[:,0]
         df["brainage_at_ses3"] = y_pred[:,1]
-        df["test_MAE1"] = test_MAE1                    
-        df["test_MAE2"] = test_MAE2
+        df["test_loss1"] = loss1_list                    
+        df["test_loss2"] = loss2_list
         df["test_r1"] = test_r1
         df["test_r2"] = test_r2
         df["visit_order"] = visit_order
@@ -185,7 +192,7 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
-    epoch_loss_df, perf_df = run(train_df, test_df, data_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
+    epoch_loss_df, perf_df = run(train_df, test_df, pheno_cols_ses2, pheno_cols_ses3, hidden_size, transform)
 
     print(f"Saving LSN_roi run:{run_id}, config: {config_idx} results at: {perf_save_path}")
     perf_df.to_csv(perf_save_path)
