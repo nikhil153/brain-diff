@@ -79,6 +79,8 @@ if __name__ == "__main__":
     if test_run:
         path_list = nii_path_list[:5]
         print(f"Doing a test run with 5 images")
+    else: 
+        path_list = nii_path_list
 
     adnimerge_df = pd.read_csv(adnimerge_file)
 
@@ -91,17 +93,18 @@ if __name__ == "__main__":
         visit_code, diff_in_days = get_closest_visit_code(subject_df, acq_date)
 
         sub_label = "sub-ADNI" + ptid.replace("_","")
-        ses_label = f"_ses-{visit_code}"
+        ses_label = f"ses-{visit_code}"
         
-        save_path = f"{bids_dir}/{sub_label}/{ses_label}/anat/"
-        bids_name = sub_label + ses_label + "_T1w.nii"
-
+        save_dir = f"{bids_dir}/{sub_label}/{ses_label}/anat/"
+        bids_name = sub_label + "_" + ses_label + "_T1w.nii"
+        save_path = f"{save_dir}{bids_name}"
+        
         df = pd.DataFrame(columns=["PTID","IID","visit_code","acq_date","diff_in_days","bids_name"])
         df.loc[0] = [ptid, img_id, visit_code, acq_date, diff_in_days, bids_name]
         log_df = log_df.append(df)
 
-        # Path(save_path).mkdir(parents=True, exist_ok=True)
-        # shutil.copy(p, save_path)
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(p, save_path)
 
     log_df.to_csv(f"{log_dir}/bids.log")
 
