@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description=HELPTEXT)
 
 # data
 parser.add_argument('--nii_path_file', dest='nii_path_file',                     
-                    help='path to file with all the nii paths extrated from ADNI longitudinal zip files')
+                    help='path to file with all the nii (abslolute) paths extrated from ADNI longitudinal zip files')
 
 parser.add_argument('--bids_dir', dest='bids_dir',  
                     default='./bids_dir',
@@ -101,7 +101,8 @@ if __name__ == "__main__":
         
         df = pd.DataFrame(columns=["PTID","IID","visit_code","acq_date","diff_in_days","bids_name"])
         df.loc[0] = [ptid, img_id, visit_code, acq_date, diff_in_days, bids_name]
-        log_df = log_df.append(df)
+        
+        log_df = pd.concat([log_df,df],axis=0)
 
         Path(save_dir).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(p, save_path)
