@@ -44,10 +44,10 @@ args = parser.parse_args()
 
 
 def get_subject_info_from_path(p):
-    
-    ptid = p.split("/")[2]
-    acq_date = p.split("/")[4].split("_")[0]
-    img_id = p[::-1].split(".")[1].split("_")[0][::-1]
+    nii_file_name = p.rsplit("/",1)[1]
+    ptid = nii_file_name.split("_")[1] + "_S_" + nii_file_name.split("_")[3]
+    acq_date = p.rsplit("/",3)[1].split("_")[0]
+    img_id = nii_file_name[::-1].split(".")[1].split("_")[0][::-1]
 
     return ptid, acq_date, img_id
 
