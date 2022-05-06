@@ -86,26 +86,31 @@ if __name__ == "__main__":
 
     log_df = pd.DataFrame()
     for p in path_list:
-        ptid, acq_date, img_id = get_subject_info_from_path(p)
 
-        subject_df = adnimerge_df[(adnimerge_df["PTID"]==ptid)]
-        
-        visit_code, diff_in_days = get_closest_visit_code(subject_df, acq_date)
+        try:
+            ptid, acq_date, img_id = get_subject_info_from_path(p)
 
-        sub_label = "sub-ADNI" + ptid.replace("_","")
-        ses_label = f"ses-{visit_code}"
+            subject_df = adnimerge_df[(adnimerge_df["PTID"]==ptid)]
         
-        save_dir = f"{bids_dir}/{sub_label}/{ses_label}/anat/"
-        bids_name = sub_label + "_" + ses_label + "_T1w.nii"
-        save_path = f"{save_dir}{bids_name}"
-        
-        df = pd.DataFrame(columns=["PTID","IID","visit_code","acq_date","diff_in_days","bids_name"])
-        df.loc[0] = [ptid, img_id, visit_code, acq_date, diff_in_days, bids_name]
-        
-        log_df = pd.concat([log_df,df],axis=0)
+            visit_code, diff_in_days = get_closest_visit_code(subject_df, acq_date)
 
-        Path(save_dir).mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(p, save_path)
+            sub_label = "sub-ADNI" + ptid.replace("_","")
+            ses_label = f"ses-{visit_code}"
+        
+            save_dir = f"{bids_dir}/{sub_label}/{ses_label}/anat/"
+            bids_name = sub_label + "_" + ses_label + "_T1w.nii"
+            save_path = f"{save_dir}{bids_name}"
+        
+            df = pd.DataFrame(columns=["PTID","IID","visit_code","acq_date","diff_in_days","bids_name"])
+            df.loc[0] = [ptid, img_id, visit_code, acq_date, diff_in_days, bids_name]
+        
+            log_df = pd.concat([log_df,df],axis=0)
+
+            Path(save_dir).mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(p, save_path)
+
+        except:
+            print(f"Error with path: {p}")
 
     log_df.to_csv(f"{log_dir}/bids.log")
 
