@@ -59,7 +59,7 @@ def parse_aseg(aseg_file, stat_measure):
     aseg_df = aseg_df[["f4","f3"]].rename(columns={"f3":stat_measure, "f4":"hemi_ROI"})
     aseg_df["hemi_ROI"] = aseg_df["hemi_ROI"].str.decode('utf-8') 
 
-    print(f"number of ROIs in aseg file: {len(aseg_df)}")
+    # print(f"number of ROIs in aseg file: {len(aseg_df)}")
 
     return aseg_df
 
@@ -151,13 +151,18 @@ if __name__ == "__main__":
             except:
                 print(f"Error parsing subcortical volumes for {subject_id}")
 
+        
         field_df = ukbb_aseg_vol_fields_df[ukbb_aseg_vol_fields_df["hemi_ROI"].isin(stat_measure_df.columns)]
+        common_rois = list(field_df["hemi_ROI"].values)
         roi_field_id_dict = dict(zip(field_df["hemi_ROI"], field_df["Field ID"]))
 
         print(f"Number of aseg vol ROIs after UKBB merge: {len(roi_field_id_dict)}")
+
+        # Rename ROIs with ukbb ids (remove the ROIs which don't have ukbb ids)
+        stat_measure_df = stat_measure_df[["subject_id"] + common_rois].copy()
         stat_measure_df = stat_measure_df.rename(columns=roi_field_id_dict)
 
         save_file = f"aseg_subcortical_volumes.csv"
-
+        
         print(f"Saving subcortical stat measures here: {save_dir}/{save_file}")
         stat_measure_df.to_csv(f"{save_dir}/{save_file}")
