@@ -15,7 +15,9 @@ Date: May-5-2022
 #  python collate_freesurfer_stats.py --stat_file aparc.DKTatlas.stats \
 #                                     --stat_measure average_thickness_mm \
 #                                     --fs_output_dir /home/nikhil/projects/QPN_processing/test_data/fmriprep/output/freesurfer-6.0.1/ \
-#                                     --UKBB_dkt_ct_fields /home/nikhil/projects/brain_changes/brain-diff/metadata/UKBB_DKT_CT_Fields.csv \
+#                                     --ukbb_dkt_ct_fields /home/nikhil/projects/brain_changes/brain-diff/metadata/UKBB_DKT_CT_Fields.csv \
+#                                     --ukbb_aseg_vol_fields /home/nikhil/projects/brain_changes/brain-diff/metadata/UKBB_ASEG_vol_Fields.csv \
+#                                     --aseg \
 #                                     --save_dir ./
 
 parser = argparse.ArgumentParser(description=HELPTEXT)
@@ -32,8 +34,15 @@ parser.add_argument('--stat_measure', dest='stat_measure',
                     default='average_thickness_mm',
                     help='path to bids_dir')                    
 
-parser.add_argument('--UKBB_dkt_ct_fields', dest='UKBB_dkt_ct_fields',  
-                    help='UKBB lookup table with fields ID and ROI names')
+parser.add_argument('--ukbb_dkt_ct_fields', dest='ukbb_dkt_ct_fields',  
+                    help='UKBB lookup table with fields ID and DKT ROI names')
+
+parser.add_argument('--ukbb_aseg_vol_fields', dest='ukbb_aseg_vol_fields',  default="", 
+                    help='UKBB lookup table with fields ID and ASEG ROI names')
+                    
+parser.add_argument('--aseg',  
+                    action='store_true',
+                    help='Parse aseg.stats to collate subcortical volumes')
 
 parser.add_argument('--save_dir', dest='save_dir',  
                     default='./',
@@ -41,6 +50,18 @@ parser.add_argument('--save_dir', dest='save_dir',
 
 args = parser.parse_args()
 
+def parse_aseg(aseg_file, stat_measure):
+    """Function to parse aseg.stats file from freesurfer"""
+
+    aseg_data = np.loadtxt(aseg_file, dtype="i1,i1,i4,f4,S32,f4,f4,f4,f4,f4")
+
+    aseg_df = pd.DataFrame(data=aseg_data)
+    aseg_df = aseg_df[["f4","f3"]].rename(columns={"f3":stat_measure, "f4":"hemi_ROI"})
+    aseg_df["hemi_ROI"] = aseg_df["hemi_ROI"].str.decode('utf-8') 
+
+    print(f"number of ROIs in aseg file: {len(aseg_df)}")
+
+    return aseg_df
 
 
 if __name__ == "__main__":
@@ -49,9 +70,12 @@ if __name__ == "__main__":
     stat_file = args.stat_file
     stat_measure = args.stat_measure
     save_dir = args.save_dir
-    UKBB_dkt_ct_fields = args.UKBB_dkt_ct_fields
+    ukbb_dkt_ct_fields = args.ukbb_dkt_ct_fields
+    ukbb_aseg_vol_fields = args.ukbb_aseg_vol_fields
 
-    UKBB_dkt_ct_fields_df = pd.read_csv(UKBB_dkt_ct_fields)
+    aseg = args.aseg
+
+    ukbb_dkt_ct_fields_df = pd.read_csv(ukbb_dkt_ct_fields)
 
     print(f"Starting to collate {stat_measure} in {fs_output_dir}")
     subject_dir_list = glob.glob(f"{fs_output_dir}sub*")
@@ -59,6 +83,7 @@ if __name__ == "__main__":
 
     print(f"Found {len(subject_id_list)} subjects")
 
+    ### cortical surface measures 
     hemispheres = ["lh", "rh"]
 
     hemi_stat_measures_dict = {}
@@ -76,10 +101,10 @@ if __name__ == "__main__":
                 df.loc[0] = vals
                 stat_measure_df = pd.concat([stat_measure_df, df], axis=0)
             except:
-                print(f"Error parsing data for {subject_id}")
+                print(f"Error parsing cortical data for {subject_id}")
 
         # replace columns names with ukbb field IDs
-        field_df = UKBB_dkt_ct_fields_df[UKBB_dkt_ct_fields_df["hemi"]==hemi][["Field ID","roi"]]
+        field_df = ukbb_dkt_ct_fields_df[ukbb_dkt_ct_fields_df["hemi"]==hemi][["Field ID","roi"]]
         roi_field_id_dict = dict(zip(field_df["roi"], field_df["Field ID"]))
         stat_measure_df = stat_measure_df.rename(columns=roi_field_id_dict)
         
@@ -88,9 +113,51 @@ if __name__ == "__main__":
     # merge left and right dfs
     stat_measure_LR_df = pd.merge(hemi_stat_measures_dict["lh"],hemi_stat_measures_dict["rh"], on="subject_id")
 
+    # Drop columns ommited by DKT atlas
+    if stat_file == "aparc.DKTatlas.stats":
+        drop_ROIs = ["temporalpole","frontalpole","banks of the superior temporal sulcus"]
+        for d_roi in drop_ROIs:
+            if d_roi in stat_measure_LR_df.columns:
+                stat_measure_LR_df = stat_measure_LR_df.drop(columns=[d_roi])
+
     save_file = f"{stat_file.split('.')[1]}_{stat_measure.rsplit('_',1)[0]}.csv"
 
-    print(f"Saving stat measures here: {save_dir}/{save_file}")
+    print(f"Saving cortical stat measures here: {save_dir}/{save_file}")
     stat_measure_LR_df.to_csv(f"{save_dir}/{save_file}")
 
+    # ASEG subcortical volumes
+    if aseg:
+        print(f"Parsing ASEG subcortical volumes")
+        stat_file = "aseg.stats"
+        stat_measure = "Volume_mm3"
 
+        # Grab UKBB field ids lookup table
+        ukbb_aseg_vol_fields_df = pd.read_csv(ukbb_aseg_vol_fields)
+        
+        stat_measure_df = pd.DataFrame()
+        for subject_id in subject_id_list:
+            try: 
+                fs_stats_dir = f"{fs_output_dir}{subject_id}/stats/"
+                aseg_file = f"{fs_stats_dir}{stat_file}"
+                stats = parse_aseg(aseg_file,stat_measure)
+                
+                cols = ["subject_id"] + list(stats["hemi_ROI"].values)
+                vals = [subject_id] + list(stats[stat_measure].values)
+                
+                df = pd.DataFrame(columns=cols)
+                df.loc[0] = vals
+                stat_measure_df = pd.concat([stat_measure_df, df], axis=0)
+
+            except:
+                print(f"Error parsing subcortical volumes for {subject_id}")
+
+        field_df = ukbb_aseg_vol_fields_df[ukbb_aseg_vol_fields_df["hemi_ROI"].isin(stat_measure_df.columns)]
+        roi_field_id_dict = dict(zip(field_df["hemi_ROI"], field_df["Field ID"]))
+
+        print(f"Number of aseg vol ROIs after UKBB merge: {len(roi_field_id_dict)}")
+        stat_measure_df = stat_measure_df.rename(columns=roi_field_id_dict)
+
+        save_file = f"aseg_subcortical_volumes.csv"
+
+        print(f"Saving subcortical stat measures here: {save_dir}/{save_file}")
+        stat_measure_df.to_csv(f"{save_dir}/{save_file}")
