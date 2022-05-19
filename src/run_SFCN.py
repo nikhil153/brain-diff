@@ -32,6 +32,9 @@ parser.add_argument('--img_subdir', dest='img_subdir',
 parser.add_argument('--sfcn_ckpt', dest='sfcn_ckpt', 
                     default="models/run_20190719_00_epoch_best_mae.p",
                     help='pre-trained SFCN model weights')
+parser.add_argument('--cohort', dest='cohort', 
+                    default="ukbb",
+                    help='subject cohort e.g. ukbb, adni')
 parser.add_argument('--subject_list', dest='subject_list', 
                     default="1010063",
                     help='subject id(s) with T1w image')
@@ -78,9 +81,10 @@ if __name__ == "__main__":
     data_dir = args.data_dir
     img_subdir = args.img_subdir
     sfcn_ckpt = args.sfcn_ckpt
+    cohort = args.cohort
     subject_list = args.subject_list
     scan_session = args.scan_session 
-
+    
     # Changing this range will shift the predicted age.
     # Prediction is treated as classification problem with n_classes = n_bins
     age_range = [42,82]
@@ -118,7 +122,7 @@ if __name__ == "__main__":
 
 
         # Original SFCN model
-        if sfcn_ckpt.split("/",1)[1] == "run_20190719_00_epoch_best_mae.p":
+        if sfcn_ckpt.rsplit("/",1)[1] == "run_20190719_00_epoch_best_mae.p":
             print("Using original SFCN checkpoint")
             model.load_state_dict(torch.load(sfcn_ckpt, map_location=torch.device('cpu')))
         else:
@@ -131,12 +135,21 @@ if __name__ == "__main__":
             try:
                 # Load image
                 subject_dir = f"{data_dir}sub-{subject_id}/"
-                if scan_session == "ses-2":
-                    T1_filename = "T1_brain_to_MNI.nii.gz"
+                if cohort == "adni":
+                    T1_filename = f"sub-{subject_id}_{scan_session}_space-MNI152Lin_res-1_desc-preproc_T1w.nii.gz"
+                elif cohort == "ukbb":
+                    if scan_session == "ses-2":
+                        T1_filename = "T1_brain_to_MNI.nii.gz"
+                    elif scan_session == "ses-3":
+                        T1_filename = f"{subject_id}_ses-3_T1_brain_to_MNI.nii.gz"
+                    else:
+                        print(f"Unknown scan session: {scan_session} for {cohort} cohort")
+
                 else:
-                    T1_filename = f"{subject_id}_ses-3_T1_brain_to_MNI.nii.gz"
+                    print(f"Unknown {cohort} cohort")
 
                 T1_mni = f"{subject_dir}{img_subdir}{T1_filename}"
+                print(f"T1 path: {T1_mni}")
                 data = nib.load(T1_mni).get_fdata()
 
                 # Preprocessing
@@ -148,8 +161,8 @@ if __name__ == "__main__":
                 results = [subject_id, pred, prob]
                 results_df.loc[s] = results
             
-            except:
-                print(f"Could not read T1w data for :{subject_id}")                
+            except Exception as e: # work on python 3.x
+                print(f"Could not read T1w data for: {subject_id} because {e}")                
                 continue
         
         # Save results to a csv

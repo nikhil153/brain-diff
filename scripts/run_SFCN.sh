@@ -11,3 +11,4 @@ python3 ../src/run_SFCN.py \
 --scan_session "ses-bl" \
 --save_path "./tmp_results.csv"
 # --save_path "./brain-age_ukbb-followup_ses-2_SFCN-run-1_results.csv"
+# Native T1 won't work of course
