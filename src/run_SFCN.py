@@ -38,6 +38,8 @@ parser.add_argument('--cohort', dest='cohort',
 parser.add_argument('--subject_list', dest='subject_list', 
                     default="1010063",
                     help='subject id(s) with T1w image')
+parser.add_argument('--apply_brain_mask', action='store_true', 
+                    help='flag for applying brainmask to T1w')
 parser.add_argument('--scan_session', dest='scan_session', 
                     default="ses-2",
                     help='scan session for the T1w image')
@@ -82,6 +84,7 @@ if __name__ == "__main__":
     img_subdir = args.img_subdir
     sfcn_ckpt = args.sfcn_ckpt
     cohort = args.cohort
+    apply_brain_mask = args.apply_brain_mask
     subject_list = args.subject_list
     scan_session = args.scan_session 
     
@@ -137,6 +140,8 @@ if __name__ == "__main__":
                 subject_dir = f"{data_dir}sub-{subject_id}/"
                 if cohort == "adni":
                     T1_filename = f"sub-{subject_id}_{scan_session}_space-MNI152Lin_res-1_desc-preproc_T1w.nii.gz"
+                    brainmask_filename = f"sub-{subject_id}_{scan_session}_space-MNI152Lin_res-1_desc-brain_mask.nii.gz"
+                    
                 elif cohort == "ukbb":
                     if scan_session == "ses-2":
                         T1_filename = "T1_brain_to_MNI.nii.gz"
@@ -148,12 +153,22 @@ if __name__ == "__main__":
                 else:
                     print(f"Unknown {cohort} cohort")
 
+
                 T1_mni = f"{subject_dir}{img_subdir}{T1_filename}"
                 print(f"T1 path: {T1_mni}")
-                data = nib.load(T1_mni).get_fdata()
+                T1_data = nib.load(T1_mni).get_fdata()
 
-                # Preprocessing
-                input_data = preproc_images(data)
+                # Apply brain mask
+                if apply_brain_mask:
+                    brainmask_mni = f"{subject_dir}{img_subdir}{brainmask_filename}"
+                    brainmask_data = nib.load(brainmask_mni).get_fdata()
+                    masked_T1_data = brainmask_data * T1_data
+                    # Preprocessing
+                    input_data = preproc_images(masked_T1_data)
+
+                else:
+                    # Preprocessing
+                    input_data = preproc_images(T1_data)
 
                 # Prediction
                 prob, pred = get_brain_age(input_data, model, bc)
