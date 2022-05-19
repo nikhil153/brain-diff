@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -J adni_long_batch_bl
+#SBATCH -J adni_long_ohbm_batch_bl
 #SBATCH --time=23:00:00
 #SBATCH --account=def-jbpoline
 #SBATCH --cpus-per-task=4
@@ -12,11 +12,11 @@
 #SBATCH --mail-type=ALL
 # ------------------------------------------
 
-#SBATCH --array=1-200
+#SBATCH --array=1-267
 
-BIDS_DIR="/home/nikhil/scratch/adni_processing/bids/bl/"
-SUBJECT_LIST="/home/nikhil/scratch/my_repos/brain-diff/metadata/adni/adni_bl_batch1_subject_ids.txt"
-WD_DIR="/home/nikhil/scratch/adni_processing/fmriprep/bl/"
+BIDS_DIR="/home/nikhil/scratch/adni_processing/bids/ohbm/baseline/"
+SUBJECT_LIST="/home/nikhil/scratch/my_repos/brain-diff/metadata/adni_long_ohbm_subject_ids.txt"
+WD_DIR="/home/nikhil/scratch/adni_processing/fmriprep/ohbm/baseline/"
 
 echo "Starting task $SLURM_ARRAY_TASK_ID"
 SUB_ID=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $SUBJECT_LIST)

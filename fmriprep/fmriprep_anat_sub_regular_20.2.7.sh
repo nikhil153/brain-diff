@@ -68,6 +68,7 @@ cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_I
 --return-all-components --anat-only -v \
 --write-graph  --notrack \
 --bids-filter-file /data_dir/${BIDS_FILTER} \
+--output-spaces MNI152Lin:res-1 \
 --anat-only" 
 #--cifti-out 91k"
 #--bids-database-dir /work/20220221-200330_10ebc3d4-edd1-4752-8c9f-6f6dc1302c83/ \
