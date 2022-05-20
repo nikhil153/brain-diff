@@ -160,6 +160,7 @@ if __name__ == "__main__":
 
                 # Apply brain mask
                 if apply_brain_mask:
+                    print("applying brain mask")
                     brainmask_mni = f"{subject_dir}{img_subdir}{brainmask_filename}"
                     brainmask_data = nib.load(brainmask_mni).get_fdata()
                     masked_T1_data = brainmask_data * T1_data

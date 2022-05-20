@@ -12,10 +12,10 @@
 #SBATCH --mail-type=ALL
 # ------------------------------------------
 
-#SBATCH --array=1-267
+#SBATCH --array=1-125
 
 BIDS_DIR="/home/nikhil/scratch/adni_processing/bids/ohbm/baseline/"
-SUBJECT_LIST="/home/nikhil/scratch/my_repos/brain-diff/metadata/adni_long_ohbm_subject_ids.txt"
+SUBJECT_LIST="/home/nikhil/scratch/my_repos/brain-diff/metadata/adni_long_ohbm_subject_ids_tail125.txt"
 WD_DIR="/home/nikhil/scratch/adni_processing/fmriprep/ohbm/baseline/"
 
 echo "Starting task $SLURM_ARRAY_TASK_ID"
