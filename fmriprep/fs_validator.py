@@ -28,8 +28,8 @@ parser = argparse.ArgumentParser(description=HELPTEXT)
 parser.add_argument('--fs_output_dir', dest='fs_output_dir',                      
                     help='path to fs_output_dir with all the subjects')
 
-parser.add_argument('--participants_tsv', dest='participants_tsv',                      
-                    help='path to participants_tsv')
+parser.add_argument('--participants_list', dest='participants_list',                      
+                    help='path to participants list (csv or tsv')
 
 args = parser.parse_args()
 
@@ -121,9 +121,13 @@ def check_output(subject_dir):
 if __name__ == "__main__":
     # Read from csv
     fs_output_dir = args.fs_output_dir
-    participants_tsv = args.participants_tsv
+    participants_list = args.participants_list
 
-    participants_df = pd.read_csv(participants_tsv,sep="\t")
+    if participants_list.rsplit(".")[1] == "tsv":
+        participants_df = pd.read_csv(participants_list,sep="\t")
+    else:
+        participants_df = pd.read_csv(participants_list)
+
     participant_ids = participants_df["participant_id"]
     n_participans = len(participant_ids)
     print(f"Checking FreeSurfer output for {n_participans} subjects")
