@@ -136,9 +136,9 @@ if __name__ == "__main__":
     print(f"Number of subjects in the participants list: {n_participants}")
 
     # Check available subject dirs
-    subject_path_list = glob.glob(f"{fs_output_dir}sub*")
+    subject_path_list = glob.glob(f"{fs_output_dir}/sub*")
     subject_dir_list = [os.path.basename(x) for x in subject_path_list]
-
+    
     print(f"Number of FreeSurfer subject dirs: {len(subject_path_list)}")
     
     fs_participants = set(participant_ids) & set(subject_dir_list)
