@@ -129,15 +129,29 @@ if __name__ == "__main__":
         participants_df = pd.read_csv(participants_list)
 
     participant_ids = participants_df["participant_id"]
-    n_participans = len(participant_ids)
-    print(f"Checking FreeSurfer output for {n_participans} subjects")
+    n_participants = len(participant_ids)
+    print(f"Checking FreeSurfer output for {n_participants} subjects")
 
-    status_df = pd.DataFrame(columns=["participant_id","fsdir_status","mri_status","label_status","stats_status","surf_status"])
+    status_df = pd.DataFrame(columns=["participant_id","FS_complete","fsdir_status","mri_status","label_status","stats_status","surf_status"])
     for p, participant_id in enumerate(participant_ids):
         subject_dir = f"{fs_output_dir}/{participant_id}"
         status_list = check_output(subject_dir)
-        status_df.loc[p] = [participant_id] + status_list
+        FS_complete = all(flag == "Pass" for flag in status_list)
+        status_df.loc[p] = [participant_id, FS_complete] + status_list
         
+    n_complete = len(status_df[status_df["FS_complete"]])
+    n_failed = n_participants - n_complete
+
+    print(f"number of failed subjects: {n_failed}")
+
+    if n_failed > 0:
+        failed_participant_ids = status_df[~status_df["FS_complete"]]["participant_id"].values
+        subject_list = "failed_subject_ids.txt"
+        with open(f'./{subject_list}', 'w') as f:
+            for line in failed_participant_ids:
+                f.write(f"{line}\n")
+        print(f"See list: {subject_list}")
+    
     # Save fs_status_df
     save_path = "./fs_status.csv"
     print(f"Status log location: {save_path}")
