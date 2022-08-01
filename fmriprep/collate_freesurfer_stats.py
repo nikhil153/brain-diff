@@ -14,15 +14,19 @@ Date: May-5-2022
 # Sample cmd:
 #  python collate_freesurfer_stats.py --stat_file aparc.DKTatlas.stats \
 #                                     --stat_measure average_thickness_mm \
-#                                     --fs_output_dir /home/nikhil/projects/QPN_processing/test_data/fmriprep/output/freesurfer-6.0.1/ \
-#                                     --ukbb_dkt_ct_fields /home/nikhil/projects/brain_changes/brain-diff/metadata/UKBB_DKT_CT_Fields.csv \
-#                                     --ukbb_aseg_vol_fields /home/nikhil/projects/brain_changes/brain-diff/metadata/UKBB_ASEG_vol_Fields.csv \
+#                                     --fs_output_dir /home/nikhil/projects/brain_changes/data/adni/derivatives/freesurfer-6.0.1/ \
+#                                     --ukbb_dkt_ct_fields ../metadata/UKBB_DKT_CT_Fields.csv \
+#                                     --ukbb_aseg_vol_fields ../metadata/UKBB_ASEG_vol_Fields.csv \
 #                                     --aseg \
 #                                     --save_dir ./
 
 parser = argparse.ArgumentParser(description=HELPTEXT)
 
 # data
+# TODO
+# parser.add_argument('--participants_list', dest='participants_list',                      
+#                     help='path to participants list (csv or tsv')
+
 parser.add_argument('--fs_output_dir', dest='fs_output_dir',                      
                     help='path to fs_output_dir with all the subjects')
 
@@ -77,13 +81,14 @@ if __name__ == "__main__":
 
     ukbb_dkt_ct_fields_df = pd.read_csv(ukbb_dkt_ct_fields)
 
-    print(f"Starting to collate {stat_measure} in {fs_output_dir}")
+    print(f"Starting to collate {stat_measure} in {fs_output_dir}\n")
     subject_dir_list = glob.glob(f"{fs_output_dir}sub*")
     subject_id_list = [os.path.basename(x) for x in subject_dir_list]
 
-    print(f"Found {len(subject_id_list)} subjects")
+    print(f"Found {len(subject_id_list)} subjects\n")
 
     ### cortical surface measures 
+    print(f"***Parsing ASEG subcortical volumes***")
     hemispheres = ["lh", "rh"]
 
     hemi_stat_measures_dict = {}
@@ -101,7 +106,7 @@ if __name__ == "__main__":
                 df.loc[0] = vals
                 stat_measure_df = pd.concat([stat_measure_df, df], axis=0)
             except:
-                print(f"Error parsing cortical data for {subject_id}")
+                print(f"Error parsing cortical data for {subject_id} ({hemi})")
 
         # replace columns names with ukbb field IDs
         field_df = ukbb_dkt_ct_fields_df[ukbb_dkt_ct_fields_df["hemi"]==hemi][["Field ID","roi"]]
@@ -122,12 +127,12 @@ if __name__ == "__main__":
 
     save_file = f"{stat_file.split('.')[1]}_{stat_measure.rsplit('_',1)[0]}.csv"
 
-    print(f"Saving cortical stat measures here: {save_dir}/{save_file}")
+    print(f"Saving cortical stat measures here: {save_dir}/{save_file}\n")
     stat_measure_LR_df.to_csv(f"{save_dir}/{save_file}")
 
     # ASEG subcortical volumes
     if aseg:
-        print(f"Parsing ASEG subcortical volumes")
+        print(f"***Parsing ASEG subcortical volumes***")
         stat_file = "aseg.stats"
         stat_measure = "Volume_mm3"
 
