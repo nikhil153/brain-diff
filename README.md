@@ -16,6 +16,24 @@
     - Simulation: notebooks/8_brain_diff_sim_results.ipynb
 
 
+### UKB data wrangling
+
+#### Step 1
+- copy files from squashfs on Beluga
+Ses-2 (n=40681): <neurohub_ukbb_t1w_bids_derivatives.squashfs>:/neurohub/ukbb/imaging/T1
+Ses-3 (n=3208): <neurohub_ukbb_t1w_ses3_0_derivatives.squashfs>:/neurohub/ukbb/imaging
+
+#### Step 2
+```
+## move them in psudo-bids
+for i in `ls | grep sub- | grep -v json`; do 
+    mkdir -p ../`echo $i | cut -d "_" -f1`/ses-2/anat; 
+    mv `echo $i | cut -d "_" -f1`* ../`echo $i | cut -d "_" -f1`/ses-2/anat/;  
+done
+```
+
+### ADNI data wrangling
+- use src/generate_adni_bids.py
 
 ## Run instructions
 ### Simulations:

@@ -57,23 +57,29 @@ def check_mri(mri_dir):
 def check_label(label_dir):
     status_msg = "Pass"
     for parc in PARCELS:
-        for hemi in HEMISPHERES:
-            filepath = Path(f"{label_dir}/{hemi}.{parc}.annot")
-            filepath_status = Path.is_file(filepath)
-            if not filepath_status:
-                status_msg = f"{hemi}.{parc}.annot not found"
-                break;
+        if status_msg == "Pass":
+            for hemi in HEMISPHERES:
+                filepath = Path(f"{label_dir}/{hemi}.{parc}.annot")
+                filepath_status = Path.is_file(filepath)
+                if not filepath_status:
+                    status_msg = f"{hemi}.{parc}.annot not found"
+                    break;
+        else:
+            break;
     return status_msg
 
 def check_stats(stats_dir):
     status_msg = "Pass"
     for parc in PARCELS:
-        for hemi in HEMISPHERES:
-            filepath = Path(f"{stats_dir}/{hemi}.{parc}.stats")
-            filepath_status = Path.is_file(filepath)
-            if not filepath_status:
-                status_msg = f"{hemi}.{parc}.stats not found"
-                break;
+        if status_msg == "Pass":
+            for hemi in HEMISPHERES:
+                filepath = Path(f"{stats_dir}/{hemi}.{parc}.stats")
+                filepath_status = Path.is_file(filepath)
+                if not filepath_status:
+                    status_msg = f"{hemi}.{parc}.stats not found"
+                    break;
+        else:
+            break;
 
     # check aseg
     filepath = Path(f"{stats_dir}/aseg.stats")
@@ -86,12 +92,16 @@ def check_stats(stats_dir):
 def check_surf(surf_dir):
     status_msg = "Pass"
     for measure in SURF_MEASURES:
-        for hemi in HEMISPHERES:
-            filepath = Path(f"{surf_dir}/{hemi}.{measure}")
-            filepath_status = Path.is_file(filepath)
-            if not filepath_status:
-                status_msg = f"{hemi}.{measure} not found"
-                break;
+        if status_msg == "Pass":
+            for hemi in HEMISPHERES:
+                filepath = Path(f"{surf_dir}/{hemi}.{measure}")
+                filepath_status = Path.is_file(filepath)
+                if not filepath_status:
+                    status_msg = f"{hemi}.{measure} not found"
+                    break;
+        else:
+            break;
+            
     return status_msg
 
 
@@ -188,5 +198,5 @@ if __name__ == "__main__":
     
     # Save fs_status_df
     status_save_path = "./fs_status.csv"
-    print(f"See status FS csv: {status_save_path}")
+    print(f"See FS status csv: {status_save_path}")
     status_df.to_csv(status_save_path)
