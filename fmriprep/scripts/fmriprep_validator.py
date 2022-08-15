@@ -12,9 +12,6 @@ Script to validate fmriprep output
 #Author: nikhil153
 #Date: 27-July-2022
 
-
-# Sample cmd:
-
 # globals
 fmriprep_files_dict = {
     "brain_mask.json" : "desc-brain_mask.json",
@@ -40,7 +37,7 @@ parser.add_argument('--fmriprep_dir', dest='fmriprep_dir',
                     help='path to fmriprep_dir with all the subjects')
 
 parser.add_argument('--ses', dest='ses',                      
-                    help='session id e.g. ses-bl')
+                    help='session id e.g. bl')
 
 parser.add_argument('--tpl_space', dest='tpl_space',  default="MNI152NLin6Sym_res-2",                  
                     help='template space and its resolution')           
@@ -97,7 +94,7 @@ def check_output(subject_dir, participant_id, ses_id, tpl_space, check_fsl_regis
 if __name__ == "__main__":
     # Read from csv
     fmriprep_dir = args.fmriprep_dir
-    ses = args.ses
+    ses = f"ses-{args.ses}"
     tpl_space = args.tpl_space
     check_fsl_registrations = args.check_fsl_registrations
     participants_list = args.participants_list
@@ -114,7 +111,7 @@ if __name__ == "__main__":
     print(f"Number of subjects in the participants list: {n_participants}")
 
     # Check available subject dirs
-    subject_path_list = glob.glob(f"{fmriprep_dir}/sub*")
+    subject_path_list = glob.glob(f"{fmriprep_dir}/sub*[!html]")
     subject_dir_list = [os.path.basename(x) for x in subject_path_list]
     
     print(f"Number of fmriprep_dir subject dirs: {len(subject_path_list)}")
@@ -123,9 +120,9 @@ if __name__ == "__main__":
     subjects_missing_subject_dir = set(participant_ids) - set(subject_dir_list)
     subjects_missing_in_participant_list = set(subject_dir_list) - set(participant_ids)
 
-    print(f"\nSubjects missing FS subject_dir: {len(subjects_missing_subject_dir)}")
+    print(f"\nSubjects missing FMRIPrep subject_dir: {len(subjects_missing_subject_dir)}")
     print(f"Subjects missing in participant list: {len(subjects_missing_in_participant_list)}")
-    print(f"\nChecking FreeSurfer output for {len(fmriprep_participants)} subjects")
+    print(f"\nChecking FMRIPrep output for {len(fmriprep_participants)} subjects")
 
     status_cols = ["fmriprep_status","fsl_status"]
     status_df = pd.DataFrame(columns=["participant_id","fmriprep_complete"] + status_cols)
