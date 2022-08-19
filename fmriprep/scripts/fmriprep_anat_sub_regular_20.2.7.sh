@@ -60,16 +60,17 @@ find ${LOCAL_FREESURFER_DIR}/sub-$SUB_ID/ -name "*IsRunning*" -type f -delete
 
 # Compose the command line
 cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_ID \
--w /work --output-spaces MNI152NLin2009cAsym:res-2 anat fsnative fsaverage5 \
+-w /work \
+--output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Sym_res-1 MNI152Lin:res-1 anat fsnative fsaverage5 \
 --fs-subjects-dir /fsdir \
 --skip_bids_validation \
 --bids-database-dir /work/first_run/bids_db/
 --fs-license-file /home/fmriprep/.freesurfer/license.txt \
---return-all-components --anat-only -v \
---write-graph  --notrack \
+--return-all-components -v \
+--write-graph --notrack \
 --bids-filter-file /data_dir/${BIDS_FILTER} \
---output-spaces MNI152Lin:res-1 \
 --anat-only" 
+
 #--cifti-out 91k"
 #--bids-database-dir /work/20220221-200330_10ebc3d4-edd1-4752-8c9f-6f6dc1302c83/ \
 
