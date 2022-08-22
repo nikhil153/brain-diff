@@ -26,7 +26,7 @@ fmriprep_files_dict = {
 
 fsl_files_dict = { 
     "FSL_FLIRT": "desc-PMF6_T1w.nii.gz",
-    "FSL_FNIRT": "desc-FNIRT_T1w.nii.gz"
+    # "FSL_FNIRT": "desc-FNIRT_T1w.nii.gz" (Need to be copied from Beluga SquashFS)
 }
 
 # argparse
@@ -39,10 +39,10 @@ parser.add_argument('--fmriprep_dir', dest='fmriprep_dir',
 parser.add_argument('--ses', dest='ses',                      
                     help='session id e.g. bl')
 
-parser.add_argument('--tpl_space', dest='tpl_space',  default="MNI152NLin6Sym_res-2",                  
+parser.add_argument('--tpl_spaces', dest='tpl_spaces', nargs='*', default=["MNI152NLin6Sym_res-2"], 
                     help='template space and its resolution')           
 
-parser.add_argument('--check_fsl_registrations', action='store_true',                  
+parser.add_argument('--fsl_spaces',  dest='fsl_spaces', nargs='*', default=[], 
                     help='checks if fsl FLIRT and FNIRT files are there')
 
 parser.add_argument('--participants_list', dest='participants_list',                      
@@ -50,53 +50,65 @@ parser.add_argument('--participants_list', dest='participants_list',
 
 args = parser.parse_args()
 
-def check_fmriprep(subject_dir, participant_id, ses_id, tpl_space):
-    status_msg = "Pass"
-    for k,v in fmriprep_files_dict.items():
-        if status_msg == "Pass":
-            for file_suffix in [v, f"space-{tpl_space}_{v}"]:
-                filepath = Path(f"{subject_dir}/{ses_id}/anat/{participant_id}_{ses_id}_{file_suffix}")
-                filepath_status = Path.is_file(filepath)
-                if not filepath_status:
-                    print(filepath)
-                    status_msg = f"{file_suffix} not found"
-                    break;
-        else:
-            break;
+def check_fmriprep(subject_dir, participant_id, ses_id, tpl_spaces):    
+    status_dict = {}
+    for tpl_space in tpl_spaces:
+        status_msg = "Pass"
+        for k,v in fmriprep_files_dict.items():
+            if status_msg == "Pass":    
+                for file_suffix in [v, f"space-{tpl_space}_{v}"]:
+                    filepath = Path(f"{subject_dir}/{ses_id}/anat/{participant_id}_{ses_id}_{file_suffix}")
+                    filepath_status = Path.is_file(filepath)
+                    if not filepath_status:
+                        # print(filepath) 
+                        status_msg = f"{file_suffix} not found"
+                        status_dict[tpl_space] = status_msg
+                        break
 
-    return status_msg
+                status_dict[tpl_space] = status_msg
+            else:
+                break
 
-def check_fsl(subject_dir, participant_id, ses_id, tpl_space):
-    status_msg = "Pass"
-    for k,v in fsl_files_dict.items():
-        if status_msg == "Pass":
-            for file_suffix in [f"space-{tpl_space}_{v}"]:
-                filepath = Path(f"{subject_dir}/{ses_id}/anat/{participant_id}_{ses_id}_{file_suffix}")
-                filepath_status = Path.is_file(filepath)
-                if not filepath_status:
-                    status_msg = f"{file_suffix} not found"
-                    break;
-        else:
-            break;
+    return status_dict
 
-    return status_msg
+def check_fsl(subject_dir, participant_id, ses_id, fsl_spaces):
+    status_dict = {}
+    for fsl_space in fsl_spaces:
+        status_msg = "Pass"
+        for k,v in fsl_files_dict.items():
+            if status_msg == "Pass":
+                for file_suffix in [f"space-{fsl_space}_{v}"]:
+                    filepath = Path(f"{subject_dir}/{ses_id}/anat/{participant_id}_{ses_id}_{file_suffix}")
+                    filepath_status = Path.is_file(filepath)
+                    if not filepath_status:
+                        print(filepath)
+                        status_msg = f"{file_suffix} not found"
+                        status_dict[fsl_space] = status_msg
+                        break
+                status_dict[fsl_space] = status_msg
+            else:
+                break
 
-def check_output(subject_dir, participant_id, ses_id, tpl_space, check_fsl_registrations):
-    fmriprep_status = check_fmriprep(subject_dir, participant_id, ses_id, tpl_space)
+    return status_dict
+
+def check_output(subject_dir, participant_id, ses_id, tpl_spaces, fsl_spaces):
+    fmriprep_status_dict = check_fmriprep(subject_dir, participant_id, ses_id, tpl_spaces)
     
-    if check_fsl_registrations:
-        fsl_status = check_fsl(subject_dir, participant_id, ses_id, tpl_space)
+    if len(fsl_spaces) > 0:
+        fsl_status_dict = check_fsl(subject_dir, participant_id, ses_id, fsl_spaces)
     else:
-        fsl_status = "Not checked"
+        fsl_status_dict = {}
+        for fsl_space in fsl_spaces:
+            fsl_status_dict[fsl_space] = "Not checked"
 
-    return [fmriprep_status, fsl_status]
+    return fmriprep_status_dict, fsl_status_dict
 
 if __name__ == "__main__":
     # Read from csv
     fmriprep_dir = args.fmriprep_dir
     ses = f"ses-{args.ses}"
-    tpl_space = args.tpl_space
-    check_fsl_registrations = args.check_fsl_registrations
+    tpl_spaces = args.tpl_spaces
+    fsl_spaces = args.fsl_spaces
     participants_list = args.participants_list
 
     print(f"\nChecking subject ids and dirs...")
@@ -124,17 +136,16 @@ if __name__ == "__main__":
     print(f"Subjects missing in participant list: {len(subjects_missing_in_participant_list)}")
     print(f"\nChecking FMRIPrep output for {len(fmriprep_participants)} subjects")
 
-    status_cols = ["fmriprep_status","fsl_status"]
+    #TODO
+    status_cols = tpl_spaces + [f"fsl-{s}" for s in fsl_spaces]
     status_df = pd.DataFrame(columns=["participant_id","fmriprep_complete"] + status_cols)
 
     # populate status_df iterating over available FS subject dirs
     for p, participant_id in enumerate(fmriprep_participants):
         subject_dir = f"{fmriprep_dir}/{participant_id}"
-
-        status_list = check_output(subject_dir, participant_id, ses, tpl_space, check_fsl_registrations )
-        
-        fmriprep_complete = all(flag == "Pass" for flag in status_list)
-        status_df.loc[p] = [participant_id, fmriprep_complete] + status_list
+        fmriprep_status, fsl_status = check_output(subject_dir, participant_id, ses, tpl_spaces, fsl_spaces)
+        fmriprep_complete = all(flag == "Pass" for flag in fmriprep_status.values())
+        status_df.loc[p] = [participant_id, fmriprep_complete] + list(fmriprep_status.values()) + list(fsl_status.values())
         
     # append subjects missing FS subject_dir
     for p, participant_id in enumerate(subjects_missing_subject_dir):
