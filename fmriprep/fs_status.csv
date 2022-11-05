@@ -1,4 +1,0 @@
-,participant_id,FS_complete,fsdir_status,mri_status,label_status,stats_status,surf_status
-0,sub-ADNI002S0295,True,Pass,Pass,Pass,Pass,Pass
-1,sub-ADNI002S0413,True,Pass,Pass,Pass,Pass,Pass
-3,sub-ADNI000S0000,False,subject dir not found,subject dir not found,subject dir not found,subject dir not found,subject dir not found
