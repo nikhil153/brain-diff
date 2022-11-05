@@ -61,7 +61,7 @@ find ${LOCAL_FREESURFER_DIR}/sub-$SUB_ID/ -name "*IsRunning*" -type f -delete
 # Compose the command line
 cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_ID \
 -w /work \
---output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Sym_res-1 MNI152Lin:res-1 anat fsnative fsaverage5 \
+--output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Sym:res-1 MNI152Lin:res-1 anat fsnative fsaverage5 \
 --fs-subjects-dir /fsdir \
 --skip_bids_validation \
 --bids-database-dir /work/first_run/bids_db/

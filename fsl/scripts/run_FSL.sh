@@ -4,19 +4,19 @@
 # author: nikhil153
 # date: 1 Aug 2022
 
-if [ "$#" -ne 6 ]; then
+if [ "$#" -ne 7 ]; then
     echo "Please specify BIDS_DIR, SUBJECT_ID, OUTPUT_DIR, REORIENT, DOF, and SINGULARITY_IMG"
     exit 1
 fi
 
 LOCAL_BIDS_DIR=$1
 SUBJECT_ID=$2
-LOCAL_OUTPUT_DIR=$3
-REORIENT=$4
-DOF=$5
-SINGULARITY_IMG=$6
+SESSION=$3
+LOCAL_OUTPUT_DIR=$4
+REORIENT=$5
+DOF=$6
+SINGULARITY_IMG=$7
 
-SESSION="ses-bl"
 MNI152="/usr/local/fsl/data/standard/MNI152_T1_1mm_brain.nii.gz"
 
 SINGULARITY_BIDS_DIR="/bids_dir/"

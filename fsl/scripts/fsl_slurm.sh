@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH -J adni123_bl_fsl
+#SBATCH -J ukb_postohbm_ses-2_1-800_fsl
 #SBATCH --time=00:55:00
 #SBATCH --account=def-jbpoline
 #SBATCH --cpus-per-task=4
@@ -12,11 +12,13 @@
 #SBATCH --mail-type=ALL
 # ------------------------------------------
 
-#SBATCH --array=601-1106
+#SBATCH --array=11-800
 
-BIDS_DIR="/home/nikhil/scratch/adni_processing/adni123_bl_m24_July_2022/derivatives/bl/fmriprep"
-SUBJECT_LIST="/home/nikhil/scratch/my_repos/brain-diff/metadata/adni/subject_lists/adni123_fsl_subject_ids.txt"
-OUT_DIR="/home/nikhil/scratch/adni_processing/adni123_bl_m24_July_2022/derivatives/bl/fsl"
+BIDS_DIR="/home/nikhil/scratch/ukbb_processing/derivatives/ses-2/output/fmriprep/"
+SUBJECT_LIST="/home/nikhil/scratch/ukbb_processing/bids/participants.tsv"
+OUT_DIR="/home/nikhil/scratch/ukbb_processing/derivatives/fsl/ses-2/"
+
+SESSION="ses-2"
 
 echo "Starting task $SLURM_ARRAY_TASK_ID"
 SUB_ID=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $SUBJECT_LIST)
@@ -28,4 +30,4 @@ DOF="6"
 module load singularity/3.8
 source /home/nikhil/projects/def-jbpoline/nikhil/env/green_compute/bin/activate
 
-./run_FSL.sh ${BIDS_DIR} ${SUB_ID} ${OUT_DIR} $REORIENT $DOF /home/nikhil/scratch/my_containers/Singularity.fsl.sif
+./run_FSL.sh ${BIDS_DIR} ${SUB_ID} ${SESSION} ${OUT_DIR} $REORIENT $DOF /home/nikhil/scratch/my_containers/Singularity.fsl.sif
