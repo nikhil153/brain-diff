@@ -3,20 +3,22 @@
 # Author: nikhil153
 # Last update: 16 Feb 2022
 
-if [ "$#" -ne 3 ]; then
-  echo "Please provide paths to the bids_dir, working_dir and subject ID (i.e. subdir inside BIDS_DIR)"
+if [ "$#" -ne 4 ]; then
+  echo "Please provide paths to the bids_dir, working_dir, subject ID (i.e. subdir inside BIDS_DIR), and tar dir for freesurfer output"
   exit 1
 fi
 
 BIDS_DIR=$1
 WD_DIR=$2
 SUB_ID=$3
+tar_dir=$4
 
 BIDS_FILTER="bids_filter.json"
 
 CON_IMG="/home/nikhil/scratch/my_containers/fmriprep_20.2.7.sif"
 DERIVS_DIR=${WD_DIR}/output
 
+SUB_FS_DIR="$DERIVS_DIR/freesurfer-6.0.1/$SUB_ID"
 LOG_FILE=${WD_DIR}_fmriprep_anat.log
 echo "Starting fmriprep proc with container: ${CON_IMG}"
 echo ""
@@ -61,7 +63,7 @@ find ${LOCAL_FREESURFER_DIR}/sub-$SUB_ID/ -name "*IsRunning*" -type f -delete
 # Compose the command line
 cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_ID \
 -w /work \
---output-spaces MNI152NLin2009cAsym:res-2 MNI152NLin6Sym:res-1 MNI152Lin:res-1 anat fsnative fsaverage5 \
+--output-spaces MNI152NLin2009cSym:res-1 MNI152NLin6Sym:res-1 MNI152Lin:res-1 anat fsnative \
 --fs-subjects-dir /fsdir \
 --skip_bids_validation \
 --bids-database-dir /work/first_run/bids_db/
@@ -80,6 +82,16 @@ unset PYTHONPATH
 echo Commandline: $cmd
 eval $cmd
 exitcode=$?
+
+# tar freesurfer output
+tar -czf "$tar_dir/${SUB_ID}.tar.gz" $SUB_FS_DIR
+
+# remove FS dir (except stats subdir)
+rm -rf $SUB_FS_DIR/{label,mri,scripts,surf,tmp,touch,trash}
+
+# clean up wf
+SID=`echo $SUB_ID | cut -d "-" -f2`
+rm -rf ${WD_DIR}/fmriprep_wf/single_subject_${SID}_wf
 
 # Output results to a table
 echo "$SUB_ID    ${SLURM_ARRAY_TASK_ID}    $exitcode"
