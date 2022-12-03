@@ -1,5 +1,4 @@
 from re import ASCII
-import numpy as np
 import pandas as pd
 from pathlib import Path
 import argparse
@@ -12,9 +11,9 @@ Script to validate freesurfer output
 #Author: nikhil153
 #Date: 27-July-2022
 
-
-# Sample cmd:
-
+# Example command
+# python fs_validator.py --fs_output_dir /home/nimhans/projects/data/example_dataset/derivatives/fmriprep/output/freesurfer/ses-01 \
+#                        --participants_list /home/nimhans/projects/data/example_dataset/tabular/demographics/participants.csv
 
 # Globals
 FIRST_LEVEL_DIRS = ["label", "mri", "stats", "surf"]
@@ -30,7 +29,7 @@ parser.add_argument('--fs_output_dir', dest='fs_output_dir',
                     help='path to fs_output_dir with all the subjects')
 
 parser.add_argument('--participants_list', dest='participants_list',                      
-                    help='path to participants list (csv or tsv')
+                    help='path to participants list (csv or tsv)')
 
 args = parser.parse_args()
 
@@ -41,7 +40,7 @@ def check_fsdirs(subject_dir):
         dirpath_status = Path.is_dir(dirpath)
         if not dirpath_status:
             status_msg = f"{fsdir} not found"
-            break;
+            break
     return status_msg
 
 def check_mri(mri_dir):
@@ -51,7 +50,7 @@ def check_mri(mri_dir):
         filepath_status = Path.is_file(filepath)
         if not filepath_status:
             status_msg = f"{parc}+aseg.mgz not found"
-            break;
+            break
     return status_msg
 
 def check_label(label_dir):
@@ -63,9 +62,9 @@ def check_label(label_dir):
                 filepath_status = Path.is_file(filepath)
                 if not filepath_status:
                     status_msg = f"{hemi}.{parc}.annot not found"
-                    break;
+                    break
         else:
-            break;
+            break
     return status_msg
 
 def check_stats(stats_dir):
@@ -77,9 +76,9 @@ def check_stats(stats_dir):
                 filepath_status = Path.is_file(filepath)
                 if not filepath_status:
                     status_msg = f"{hemi}.{parc}.stats not found"
-                    break;
+                    break
         else:
-            break;
+            break
 
     # check aseg
     filepath = Path(f"{stats_dir}/aseg.stats")
@@ -98,13 +97,11 @@ def check_surf(surf_dir):
                 filepath_status = Path.is_file(filepath)
                 if not filepath_status:
                     status_msg = f"{hemi}.{measure} not found"
-                    break;
+                    break
         else:
-            break;
+            break
             
     return status_msg
-
-
 
 def check_output(subject_dir):
 
@@ -133,6 +130,10 @@ if __name__ == "__main__":
     # Read from csv
     fs_output_dir = args.fs_output_dir
     participants_list = args.participants_list
+    status_log_dir = fs_output_dir + "/status_logs/"
+
+    if not Path.is_dir(Path(status_log_dir)):
+        os.mkdir(status_log_dir)
 
     print(f"\nChecking subject ids and dirs...")
     # Check number of participants from the list
@@ -142,6 +143,7 @@ if __name__ == "__main__":
         participants_df = pd.read_csv(participants_list)
 
     participant_ids = participants_df["participant_id"]
+    participant_ids = ["sub-" + str(id) for id in participant_ids]
     n_participants = len(participant_ids)
     print(f"Number of subjects in the participants list: {n_participants}")
 
@@ -183,20 +185,20 @@ if __name__ == "__main__":
 
     if n_failed > 0:
         failed_participant_ids = status_df[status_df["FS_complete"]==False]["participant_id"].values
-        subject_list = "./failed_subject_ids.txt"
+        subject_list = f"{status_log_dir}/failed_subject_ids.txt"
         with open(f'{subject_list}', 'w') as f:
             for line in failed_participant_ids:
                 f.write(f"{line}\n")
         print(f"See failed subject list: {subject_list}")
 
     if len(subjects_missing_in_participant_list) > 0:
-        subject_list = "./subjects_missing_in_participant_list.txt"
+        subject_list = f"{status_log_dir}/subjects_missing_in_participant_list.txt"
         with open(f'{subject_list}', 'w') as f:
             for line in subjects_missing_in_participant_list:
                 f.write(f"{line}\n")
         print(f"See subjects_missing_in_participant_list: {subject_list}")
     
     # Save fs_status_df
-    status_save_path = "./fs_status.csv"
+    status_save_path = f"{status_log_dir}/fs_status.csv"
     print(f"See FS status csv: {status_save_path}")
     status_df.to_csv(status_save_path)
