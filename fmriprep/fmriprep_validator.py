@@ -106,7 +106,7 @@ def check_fsl(subject_dir, participant_id, ses_id, fsl_spaces):
                     filepath = Path(f"{subject_dir}/{ses_id}/anat/{participant_id}_{ses_id}_{file_suffix}")
                     filepath_status = Path.is_file(filepath)
                     if not filepath_status:
-                        print(filepath)
+                        # print(filepath)
                         status_msg = f"{file_suffix} not found"
                         status_dict[fsl_space] = status_msg
                         break
@@ -204,7 +204,8 @@ if __name__ == "__main__":
         status_list = len(status_cols)*["subject dir not found"]
         fmriprep_complete = len(status_cols)*[False]
         fmriprep_status = len(status_cols)*["Not checked"]
-        status_df.loc[p + len(participant_ids)] = [participant_id] + fmriprep_complete + fmriprep_status + list(fsl_status.values())
+        fsl_status = len(fsl_spaces)*["Not checked"]
+        status_df.loc[p + len(participant_ids)] = [participant_id] + fmriprep_complete + fmriprep_status + fsl_status
 
     status_df["fmriprep_complete"] = status_df[fmriprep_complete_cols].prod(axis=1).astype(bool)
     n_complete = len(status_df[status_df["fmriprep_complete"]])
