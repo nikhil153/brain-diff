@@ -171,7 +171,7 @@ if __name__ == "__main__":
     subjects_missing_in_participant_list = set(subject_dir_list) - set(participant_ids)
 
     print(f"\nSubjects missing FMRIPrep subject_dir: {len(subjects_missing_subject_dir)}")
-    print(f"Subjects missing in participant list: {len(subjects_missing_in_participant_list)}")
+    print(f"\nSubjects missing in participant list: {len(subjects_missing_in_participant_list)}")
     print(f"\nChecking FMRIPrep output for {len(fmriprep_participants)} subjects")
 
     print(f"\nChecking for following templateflow spaces:\n{tpl_spaces}")
@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     status_cols = fmriprep_tpl_spaces + [f"fsl-{s}" for s in fsl_spaces]
     status_df = pd.DataFrame(columns=["participant_id"] + fmriprep_complete_cols + status_cols)
-    print(f"\Number of status cols: {len(status_df.columns)}")
+    print(f"\nNumber of status cols: {len(status_df.columns)}")
 
     # populate status_df iterating over available FS subject dirs
     print(f"\nPopulating status_df iterating over available FS subject dirs")
@@ -208,11 +208,10 @@ if __name__ == "__main__":
     for p, participant_id in enumerate(subjects_missing_subject_dir):
         subject_dir = f"{fmriprep_dir}/{participant_id}"
         status_list = len(status_cols)*["subject dir not found"]
-        fmriprep_complete = len(status_cols)*[False]
-        fmriprep_status = len(status_cols)*["Not checked"]
-        fsl_status = len(fsl_spaces)*["Not checked"]
-        print(f"error here: {len(fmriprep_complete), len(fmriprep_status), len(fsl_status)} ")
-        status_df.loc[p + len(participant_ids)] = [participant_id] + fmriprep_complete + fmriprep_status + fsl_status
+        fmriprep_complete = len(modalities)*[False]
+        fmriprep_fsl_status = len(status_cols)*["Not checked"]
+        # print(f"error here: {len(fmriprep_complete), len(fmriprep_status), len(fsl_status)} ")
+        status_df.loc[p + len(participant_ids)] = [participant_id] + fmriprep_complete + fmriprep_fsl_status
 
     status_df["fmriprep_complete"] = status_df[fmriprep_complete_cols].prod(axis=1).astype(bool)
     n_complete = len(status_df[status_df["fmriprep_complete"]])
