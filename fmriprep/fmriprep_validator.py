@@ -142,6 +142,8 @@ if __name__ == "__main__":
     if args.run != None:
         run = f"run-{args.run}"
         print(f"Using run id string: {run}")
+    else:
+        run = args.run
 
     modalities = MODALITIES
 
@@ -174,7 +176,7 @@ if __name__ == "__main__":
     subjects_missing_in_participant_list = set(subject_dir_list) - set(participant_ids)
 
     print(f"\nSubjects missing FMRIPrep subject_dir: {len(subjects_missing_subject_dir)}")
-    print(f"\nSubjects missing in participant list: {len(subjects_missing_in_participant_list)}")
+    print(f"Subjects missing in participant list: {len(subjects_missing_in_participant_list)}")
     print(f"\nChecking FMRIPrep output for {len(fmriprep_participants)} subjects")
 
     print(f"\nChecking for following templateflow spaces:\n{tpl_spaces}")
