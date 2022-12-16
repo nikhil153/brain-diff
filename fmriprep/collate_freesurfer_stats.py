@@ -36,7 +36,7 @@ parser.add_argument('--stat_file', dest='stat_file',
 
 parser.add_argument('--stat_measure', dest='stat_measure',  
                     default='average_thickness_mm',
-                    help='path to bids_dir')                    
+                    help='name of the metric from the stats dir to be quantified')                    
 
 parser.add_argument('--ukbb_dkt_ct_fields', dest='ukbb_dkt_ct_fields',  
                     help='UKBB lookup table with fields ID and DKT ROI names')

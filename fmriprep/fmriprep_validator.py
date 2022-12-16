@@ -12,7 +12,7 @@ Script to validate fmriprep output
 #Date: 27-July-2022
 
 # globals
-MODALITIES = ["anat","func"]
+MODALITIES = ["anat"] #["func"]
 TASK = "rest"
 
 #sub-MNI0056D864854_ses-01_task-rest_run-1_space-T1w_desc-preproc_bold.nii.gz
@@ -60,8 +60,11 @@ parser.add_argument('--run', dest='run', default=None,
 parser.add_argument('--tpl_spaces', dest='tpl_spaces', nargs='*', default=["MNI152NLin2009cAsym_res-2"], 
                     help='template space and its resolution')           
 
-parser.add_argument('--fsl_spaces',  dest='fsl_spaces', nargs='*', default=[], 
+parser.add_argument('--fsl_spaces',  dest='fsl_spaces', nargs='*', default=["MNI152NLin6Sym"], 
                     help='checks if fsl FLIRT and FNIRT files are there')
+
+parser.add_argument('--participants_list', dest='participants_list',                      
+                    help='path to participants list (csv or tsv')
 
 parser.add_argument('--participants_list', dest='participants_list',                      
                     help='path to participants list (csv or tsv')
@@ -139,7 +142,8 @@ if __name__ == "__main__":
     tpl_spaces = args.tpl_spaces
     fsl_spaces = args.fsl_spaces
     participants_list = args.participants_list
-    status_log_dir = fmriprep_dir + "/status_logs/"
+    status_log_dir = args.status_log_dir 
+    
     modalities = MODALITIES
 
     if not Path.is_dir(Path(status_log_dir)):
@@ -153,7 +157,10 @@ if __name__ == "__main__":
         participants_df = pd.read_csv(participants_list)
 
     participant_ids = participants_df["participant_id"]
-    participant_ids = ["sub-" + str(id) for id in participant_ids]
+    if str(participant_ids.values[0])[:3] != "sub":
+        print("Adding sub prefix to the participant_id(s)")
+        participant_ids = ["sub-" + str(id) for id in participant_ids]
+    
     n_participants = len(participant_ids)
     print(f"Number of subjects in the participants list: {n_participants}")
 
