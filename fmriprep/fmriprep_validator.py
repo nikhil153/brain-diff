@@ -134,11 +134,14 @@ if __name__ == "__main__":
     # Read from csv
     fmriprep_dir = args.fmriprep_dir
     ses = f"ses-{args.ses}"
-    run = f"run-{args.run}"
     tpl_spaces = args.tpl_spaces
     fsl_spaces = args.fsl_spaces
     participants_list = args.participants_list
     status_log_dir = args.status_log_dir 
+
+    if args.run != None:
+        run = f"run-{args.run}"
+        print(f"Using run id string: {run}")
 
     modalities = MODALITIES
 
@@ -210,7 +213,6 @@ if __name__ == "__main__":
         status_list = len(status_cols)*["subject dir not found"]
         fmriprep_complete = len(modalities)*[False]
         fmriprep_fsl_status = len(status_cols)*["Not checked"]
-        # print(f"error here: {len(fmriprep_complete), len(fmriprep_status), len(fsl_status)} ")
         status_df.loc[p + len(participant_ids)] = [participant_id] + fmriprep_complete + fmriprep_fsl_status
 
     status_df["fmriprep_complete"] = status_df[fmriprep_complete_cols].prod(axis=1).astype(bool)
