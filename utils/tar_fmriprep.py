@@ -30,7 +30,7 @@ parser.add_argument('--session', help='session id')
 parser.add_argument('--modality', default="anat", help='modality')
 parser.add_argument('--participants_list', help='path to list of particitpants')     
 parser.add_argument('--file_ext', default="", help='file extension')               
-parser.add_argument('--output_dir', help='output_dir to save tars')
+parser.add_argument('--output_dir', default=None, help='output_dir to save tars')
 parser.add_argument('--remove_orig', default=False, action='store_true', help='remove original files after tarring to clean up')
 
 
@@ -48,9 +48,12 @@ remove_orig = args.remove_orig
 if file_ext == "":
     print("No file-type provided. Tarring entire participant dir")
 
+if output_dir == None:
+    print("Saving tars in to the participant dir itself")
+    
 if remove_orig:
     print("***Removing original files after tarring***")
-    
+
 # Check number of participants from the list
 if participants_list.rsplit(".")[1] == "tsv":
     participants_df = pd.read_csv(participants_list,sep="\t")
@@ -66,10 +69,16 @@ print(f"Number of participants: {len(participant_ids)}")
 for participant_id in participant_ids:
     participant_dir = f"{fmriprep_dir}/{participant_id}/ses-{session}/{modality}/"
     file_list = glob.glob(f"{participant_dir}/*{file_ext}")
-    if file_ext == "":
-        tar_file_name = f"{output_dir}/{participant_id}.tar"
+
+    if output_dir == None:
+        save_dir = participant_dir
     else:
-        tar_file_name = f"{output_dir}/{participant_id}_{file_ext}.tar"
+        save_dir = output_dir
+
+    if file_ext == "":
+        tar_file_name = f"{save_dir}/{participant_id}.tar"
+    else:
+        tar_file_name = f"{save_dir}/{participant_id}_{file_ext}.tar"
 
     # Tar the files
     try:
