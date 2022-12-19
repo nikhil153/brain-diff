@@ -31,6 +31,8 @@ parser.add_argument('--modality', default="anat", help='modality')
 parser.add_argument('--participants_list', help='path to list of particitpants')     
 parser.add_argument('--file_ext', default="", help='file extension')               
 parser.add_argument('--output_dir', help='output_dir to save tars')
+parser.add_argument('--remove_orig', default=False, action='store_true', help='remove original files after tarring to clean up')
+
 
 args = parser.parse_args()
 
@@ -41,10 +43,14 @@ modality = args.modality
 participants_list = args.participants_list
 file_ext = args.file_ext
 output_dir = args.output_dir
+remove_orig = args.remove_orig
 
 if file_ext == "":
     print("No file-type provided. Tarring entire participant dir")
 
+if remove_orig:
+    print("***Removing original files after tarring***")
+    
 # Check number of participants from the list
 if participants_list.rsplit(".")[1] == "tsv":
     participants_df = pd.read_csv(participants_list,sep="\t")
@@ -65,4 +71,12 @@ for participant_id in participant_ids:
     else:
         tar_file_name = f"{output_dir}/{participant_id}_{file_ext}.tar"
 
-    tar_files(tar_file_name, file_list)
+    # Tar the files
+    try:
+        tar_files(tar_file_name, file_list)
+    except:
+        print(f"Error while tarring {participant_id}")
+    else:
+        if remove_orig:
+            for f in file_list:
+                os.remove(f)
