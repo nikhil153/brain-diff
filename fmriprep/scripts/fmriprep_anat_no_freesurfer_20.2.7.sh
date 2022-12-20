@@ -3,15 +3,14 @@
 # Author: nikhil153
 # Last update: 16 Feb 2022
 
-if [ "$#" -ne 4 ]; then
-  echo "Please provide paths to the bids_dir, working_dir, subject ID (i.e. subdir inside BIDS_DIR), and tar dir for freesurfer output"
+if [ "$#" -ne 3 ]; then
+  echo "Please aprovide paths to the bids_dir, working_dir, subject ID (i.e. subdir inside BIDS_DIR)"
   exit 1
 fi
 
 BIDS_DIR=$1
 WD_DIR=$2
 SUB_ID=$3
-tar_dir=$4
 
 BIDS_FILTER="bids_filter.json"
 
@@ -84,11 +83,10 @@ echo Commandline: $cmd
 eval $cmd
 exitcode=$?
 
-# tar freesurfer output
-tar -czf "$tar_dir/${SUB_ID}.tar.gz" $SUB_FS_DIR
+# tar fmriprep h5
+tar -cf "/output/fmriprep/${SUB_ID}/${SUB_ID}_h5.tar" "/output/fmriprep/${SUB_ID}/*h5"
+rm "/output/fmriprep/${SUB_ID}/*h5"
 
-# remove FS dir (except stats subdir)
-rm -rf $SUB_FS_DIR/{label,mri,scripts,surf,tmp,touch,trash}
 
 # clean up wf
 SID=`echo $SUB_ID | cut -d "-" -f2`
