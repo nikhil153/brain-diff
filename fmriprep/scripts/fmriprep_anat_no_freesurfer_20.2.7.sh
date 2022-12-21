@@ -62,7 +62,7 @@ find ${LOCAL_FREESURFER_DIR}/sub-$SUB_ID/ -name "*IsRunning*" -type f -delete
 # Compose the command line
 cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_ID \
 -w /work \
---output-spaces MNI152NLin2009cSym:res-1 MNI152NLin6Sym:res-1 MNI152Lin:res-1 \
+--output-spaces MNI152NLin2009cSym:res-1 \
 --fs-no-reconall \
 --fs-subjects-dir /fsdir \
 --skip_bids_validation \
@@ -84,8 +84,9 @@ eval $cmd
 exitcode=$?
 
 # tar fmriprep h5
-tar -cf "/output/fmriprep/${SUB_ID}/${SUB_ID}_h5.tar" "/output/fmriprep/${SUB_ID}/*h5"
-rm "/output/fmriprep/${SUB_ID}/*h5"
+H5_DIR="${DERIVS_DIR}/fmriprep/${SUB_ID}/ses-3/anat/"
+tar -cf "${H5_DIR}/${SUB_ID}_h5.tar" "${H5_DIR}/*h5"
+rm "${H5_DIR}/*h5"
 
 
 # clean up wf
