@@ -38,7 +38,7 @@ fmriprep_modality_file_dict = {
                             "anat":fmriprep_anat_files_dict,
                             "func":fmriprep_func_files_dict
                             }
-
+#sub-4668981_ses-2_space-MNI152NLin6Sym_res-1_desc-PMF6_T1w.nii.gz
 fsl_files_dict = { 
     "FSL_FLIRT": "desc-PMF6_T1w.nii.gz",
     # "FSL_FNIRT": "desc-FNIRT_T1w.nii.gz" (Need to be copied from Beluga SquashFS)
@@ -47,7 +47,15 @@ fsl_files_dict = {
 # argparse
 parser = argparse.ArgumentParser(description=HELPTEXT)
 
-# data
+# Sample cmd:
+# python fmriprep_validator.py \
+# --fmriprep_dir /home/nikhil/scratch/ukbb_processing/derivatives/fmriprep/post_ohbm \
+# --ses 2 \
+# --tpl_spaces MNI152NLin2009cSym_res-1 MNI152NLin6Sym_res-1 MNI152Lin_res-1 \
+# --fsl_spaces MNI152NLin6Sym_res-1 \
+# --participants_list /home/nikhil/scratch/ukbb_processing/bids/participants.tsv \
+# --status_log_dir ~/scratch/ukbb_processing/derivatives/proc_status/ses-2/fmriprep/
+
 parser.add_argument('--fmriprep_dir', dest='fmriprep_dir',                      
                     help='path to fmriprep_dir with all the subjects')
 
@@ -58,7 +66,7 @@ parser.add_argument('--run', default=None, help='run id e.g. 1')
 parser.add_argument('--tpl_spaces', nargs='*', default=["MNI152NLin2009cAsym_res-2"], 
                     help='template space and its resolution')           
 
-parser.add_argument('--fsl_spaces', nargs='*', default=["MNI152NLin6Sym"], 
+parser.add_argument('--fsl_spaces', nargs='*', default=["MNI152NLin6Sym_res-1"], 
                     help='checks if fsl FLIRT and FNIRT files are there')
 
 parser.add_argument('--participants_list', help='path to participants list (csv or tsv)')
