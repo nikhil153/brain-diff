@@ -3,15 +3,14 @@
 # Author: nikhil153
 # Last update: 16 Feb 2022
 
-if [ "$#" -ne 4 ]; then
-  echo "Please provide paths to the bids_dir, working_dir, subject ID (i.e. subdir inside BIDS_DIR), and tar dir for freesurfer output"
+if [ "$#" -ne 3 ]; then
+  echo "Please aprovide paths to the bids_dir, working_dir, subject ID (i.e. subdir inside BIDS_DIR)"
   exit 1
 fi
 
 BIDS_DIR=$1
 WD_DIR=$2
 SUB_ID=$3
-tar_dir=$4
 
 BIDS_FILTER="bids_filter.json"
 
@@ -63,7 +62,8 @@ find ${LOCAL_FREESURFER_DIR}/sub-$SUB_ID/ -name "*IsRunning*" -type f -delete
 # Compose the command line
 cmd="${SINGULARITY_CMD} /data_dir /output participant --participant-label $SUB_ID \
 -w /work \
---output-spaces MNI152NLin2009cSym:res-1 MNI152NLin6Sym:res-1 MNI152Lin:res-1 \
+--output-spaces MNI152NLin2009cSym:res-1 \
+--fs-no-reconall \
 --fs-subjects-dir /fsdir \
 --skip_bids_validation \
 --bids-database-dir /work/first_run/bids_db/
@@ -83,11 +83,11 @@ echo Commandline: $cmd
 eval $cmd
 exitcode=$?
 
-# tar freesurfer output
-tar -czf "$tar_dir/${SUB_ID}.tar.gz" $SUB_FS_DIR
+# tar fmriprep h5
+H5_DIR="${DERIVS_DIR}/fmriprep/${SUB_ID}/ses-3/anat/"
+tar -cf "${H5_DIR}/${SUB_ID}_h5.tar" "${H5_DIR}/*h5"
+rm "${H5_DIR}/*h5"
 
-# remove FS dir (except stats subdir)
-rm -rf $SUB_FS_DIR/{label,mri,scripts,surf,tmp,touch,trash}
 
 # clean up wf
 SID=`echo $SUB_ID | cut -d "-" -f2`

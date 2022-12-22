@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH -J ukbb_run1
-#SBATCH --time=23:00:00
+#SBATCH -J ukbb_ses-3_no_freesurfer_batch1
+#SBATCH --time=12:00:00
 #SBATCH --account=def-jbpoline
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=8G
@@ -12,16 +12,15 @@
 #SBATCH --mail-type=ALL
 # ------------------------------------------
 
-#SBATCH --array=1-1
+#SBATCH --array=801-1600
 
-BIDS_DIR="/home/nikhil/scratch/ukbb_processing/bids"
-SUBJECT_LIST="/home/nikhil/scratch/ukbb_processing/subject_ids/ukbb_participant_ids_Nov2022_rerun.txt"
-WD_DIR="/home/nikhil/scratch/ukbb_processing/derivatives/fmriprep/nov_2022/ses-3/"
-TAR_DIR="/project/def-jbpoline/nikhil/ukbb_processing/derivatives/freesurfer-6.0.1/ses-3/"
+BIDS_DIR="/home/nikhil/scratch/ukbb_processing/bids/"
+SUBJECT_LIST="/home/nikhil/scratch/ukbb_processing/subject_ids/ukbb_participant_ids_ses2-3.txt"
+WD_DIR="/home/nikhil/scratch/ukbb_processing/derivatives/fmriprep/no_freesurfer/ses-3/"
 
 echo "Starting task $SLURM_ARRAY_TASK_ID"
 SUB_ID=$(sed -n "${SLURM_ARRAY_TASK_ID}p" $SUBJECT_LIST)
 echo "Subject ID: ${SUB_ID}"
 
 module load singularity/3.8
-../fmriprep_anat_sub_regular_20.2.7.sh ${BIDS_DIR} ${WD_DIR} ${SUB_ID} ${TAR_DIR}
+../fmriprep_anat_no_freesurfer_20.2.7.sh ${BIDS_DIR} ${WD_DIR} ${SUB_ID}
