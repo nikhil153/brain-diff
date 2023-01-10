@@ -7,12 +7,6 @@ from sklearn.model_selection import train_test_split
 from sklearn import datasets, linear_model
 from sklearn.model_selection import cross_val_score
 
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.ensemble import RandomForestRegressor
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -23,37 +17,6 @@ if torch.cuda.is_available():
     map_location=lambda storage, loc: storage.cuda()
 else:
     map_location='cpu'
-
-
-def get_brain_age_perf(X_CV, y_CV, X_test, y_test, model, cv=2):
-    """ Compute CV score and heldout sample MAE and correlation. 
-        This is used with baseline sklearn models.
-    """
-    y_CV = y_CV/100 #scale age
-
-    pipeline = Pipeline([("brainage_model", model)])
-    pipeline.fit(X_CV, y_CV)
-
-    # Evaluate the models using crossvalidation
-    CV_scores = cross_val_score(pipeline, X_CV, y_CV,
-                                scoring="neg_mean_squared_error", cv=cv)
-
-    ## predict on held out test
-    y_pred = 100*pipeline.predict(X_test) #rescale age
-
-    if y_test.ndim == 1: #single timepoint
-        test_loss1 = (y_pred - y_test)**2
-        test_r1 = stats.pearsonr(y_pred,y_test)[0]
-        test_loss2 = None
-        test_r2 = None
-    else: # two timepoints
-        test_loss1 = (y_pred[:,0] - y_test[:,0])**2
-        test_r1 = stats.pearsonr(y_pred[:,0],y_test[:,0])[0]
-        test_loss2 = (y_pred[:,1] - y_test[:,1])**2
-        test_r2 = stats.pearsonr(y_pred[:,1],y_test[:,1])[0]
-        
-    return CV_scores, y_pred, test_loss1, test_loss2, test_r1, test_r2
-
 
 # Torch Models
 class simpleFF(nn.Module):
