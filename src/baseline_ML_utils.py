@@ -17,7 +17,7 @@ def concat_sessions(df, config, features):
     """ Concats baseline and followup sessions if present"""
     X_list = []
     y_list = []
-    labels = config["output"]
+    labels = config["labels"]
     for ses in config["sessions"]:        
         X = df[df["session"]==ses][features].values                
         X_list.append(X)
